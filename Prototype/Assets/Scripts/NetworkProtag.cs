@@ -17,6 +17,7 @@ public class NetworkProtag : NetworkBehaviour
     public struct MoveStats
     {
         public float MoveSpeed;
+        public float MoveAccel;
         public float JumpHeight;
         public float Gravity;
         public Vector2 GroundCheckOffset;
@@ -27,10 +28,12 @@ public class NetworkProtag : NetworkBehaviour
     private struct MovementData : IReplicateData
     {
         public readonly float Horizontal;
+        public readonly bool Jump;
         
-        public MovementData(float horizontal)
+        public MovementData(float horizontal, bool jump)
         {
             Horizontal = horizontal;
+            Jump = jump;
             _tick = 0;
         }
         
@@ -50,13 +53,13 @@ public class NetworkProtag : NetworkBehaviour
 
     private struct ReconcileData : IReconcileData
     {
-        public readonly Vector2 Position;
+        public readonly PredictionRigidbody2D PredictionRigidbody;
         
         private uint _tick;
         
-        public ReconcileData(Vector2 position)
+        public ReconcileData(PredictionRigidbody2D predictionRigidbody)
         {
-            Position = position;
+            PredictionRigidbody = predictionRigidbody;
             _tick = 0;
         }
         
@@ -75,22 +78,35 @@ public class NetworkProtag : NetworkBehaviour
 
     private float _horizontalInput;
     private bool _jumpInput;
+    
+    private PredictionRigidbody2D _predictionRigidbody;
 
-    public override void OnStartClient()
+    private void Awake()
     {
+        _predictionRigidbody = new PredictionRigidbody2D();
+        _predictionRigidbody.Initialize(_rb);
+        Debug.Log($"Initialized PredictionRigidbody for {name}");
+    }
+
+    public override void OnStartNetwork()
+    {
+        TimeManager.OnTick += TimeManagerTickEventHandler;
+        TimeManager.OnPostTick  += TimeManagerPostTickEventHandler;
+        
         gameObject.name = "NetworkProtag";
         if (Owner.IsHost)
             gameObject.name += "[Host]";
         else
             gameObject.name += "[Client]";
         gameObject.name += $"[Owner={OwnerId}]";
-    }
 
-    public override void OnStartNetwork()
-    {
-        TimeManager.OnTick += TimeManagerTickEventHandler;
+        Color c = Color.red;
+        if (OwnerId == 0)
+            c = Color.green;
+        else if (OwnerId == 1)
+            c = Color.blue;
         
-        TimeManager.OnPostTick  += TimeManagerPostTickEventHandler;
+        GetComponentInChildren<SpriteRenderer>().color = c;
     }
 
     public override void OnStopNetwork()
@@ -105,8 +121,8 @@ public class NetworkProtag : NetworkBehaviour
     {
         if (IsOwner)
         {
-            _horizontalInput = Input.GetAxis("Horizontal");
-            _jumpInput = Input.GetButton("Jump");
+            _horizontalInput = Input.GetAxisRaw("Horizontal");
+            _jumpInput = _jumpInput || Input.GetButtonDown("Jump");
         }
     }
 
@@ -114,7 +130,7 @@ public class NetworkProtag : NetworkBehaviour
     {
         if (IsOwner)
         {
-            MovementData data = new MovementData(_horizontalInput);
+            MovementData data = new MovementData(_horizontalInput, _jumpInput);
             Replicate(data);
         }
         else
@@ -125,8 +141,11 @@ public class NetworkProtag : NetworkBehaviour
 
     private void TimeManagerPostTickEventHandler()
     {
-        if (!IsServerStarted) return;
+        _jumpInput = false;
         
+        // Only the server should be able to reconcile clients
+        if (!IsServerStarted) return;
+
         CreateReconcile();
     }
     
@@ -136,32 +155,53 @@ public class NetworkProtag : NetworkBehaviour
         ReplicateState replicateState = ReplicateState.Invalid, 
         Channel channel = Channel.Unreliable)
     {
-        Vector2 linearVel = Vector2.zero;
+        var currentVel = _rb.linearVelocity;
+
+        Vector2 desiredVel = currentVel;
+        desiredVel.x = Mathf.MoveTowards(
+            currentVel.x, 
+            data.Horizontal * _moveStats.MoveSpeed, 
+            _moveStats.MoveAccel * Time.fixedDeltaTime);
         
-        linearVel.x = data.Horizontal * _moveStats.MoveSpeed;
+        desiredVel.y += _moveStats.Gravity * 0.5f * Time.fixedDeltaTime;
+        
 
-        _bodyAnchor.position += (Vector3)linearVel * Time.fixedDeltaTime;
+        if (data.Jump && UpdateGroundCheck())
+        {
+            var jumpVel = Mathf.Sqrt( 2 * -_moveStats.Gravity * _moveStats.JumpHeight);
+            _predictionRigidbody.AddForce(Vector2.up * jumpVel, ForceMode2D.Impulse);
+            desiredVel.y = jumpVel;
+        }
+        else
+        {
+            _predictionRigidbody.AddForce(Vector2.up * _moveStats.Gravity);
+        }
+        
+        desiredVel.y += _moveStats.Gravity * 0.5f * Time.fixedDeltaTime;
+        
+        _predictionRigidbody.AddForce(Vector2.right * (desiredVel.x - currentVel.x), ForceMode2D.Impulse);
 
-        Debug.Log($"Replicating for {name} to {_bodyAnchor.position}");
+        // _predictionRigidbody.Velocity(desiredVel);
+        _predictionRigidbody.Simulate();
     }
     
     public override void CreateReconcile()
     {
-        ReconcileData data = new ReconcileData(_bodyAnchor.position);
+        ReconcileData data = new ReconcileData(_predictionRigidbody);
         Reconcile(data);
+        Debug.Log("Creating Reconcile for " + name);
     }
     
     [Reconcile]
     private void Reconcile(ReconcileData data,  Channel channel = Channel.Unreliable)
     {
-        _bodyAnchor.position = data.Position;
-        
-        Debug.Log($"Reconciled to {data.Position} for {name}");
+        Debug.Log($"Reconciling {name}");
+        _predictionRigidbody.Reconcile(data.PredictionRigidbody);
     }
 
     private bool UpdateGroundCheck()
     {
-        Vector2 checkPos = (Vector2)_bodyAnchor.position + _moveStats.GroundCheckOffset;
+        Vector2 checkPos = _rb.position + _moveStats.GroundCheckOffset;
         Collider2D hit = Physics2D.OverlapBox(checkPos, _moveStats.GroundCheckSize, 0, _moveStats.GroundLayer);
         
         return hit != null;
