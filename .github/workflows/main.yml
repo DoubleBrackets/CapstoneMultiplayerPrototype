@@ -34,8 +34,8 @@ jobs:
         targetPlatform:
           - WebGL
           - StandaloneWindows64
-          - StandaloneOSX
-          - StandaloneLinux64
+          # - StandaloneOSX
+          # - StandaloneLinux64
     steps:
       - name: Delete huge unnecessary tools folder
         run: rm -rf /opt/hostedtoolcache
