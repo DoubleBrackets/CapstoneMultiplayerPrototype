@@ -165,13 +165,21 @@ public class RelayManager : MonoBehaviour
 
     private void ConfigureTransportType(out string connectionType)
     {
+        bool isWebGL = false;
 #if UNITY_WEBGL && !UNITY_EDITOR
-        Logg.LogTrace("WebGL; using wss");
-        _fishyUnityTransport.UseWebSockets = true;
-        connectionType = "wss";
-#else
-        BadLogger.LogDebug("Not webgl; using dtls");
-        connectionType = "dtls";
+        isWebGL = true;
 #endif
+        if (isWebGL)
+        {
+            BadLogger.LogTrace("WebGL; using wss");
+            _fishyUnityTransport.UseWebSockets = true;
+            connectionType = "wss";
+        }
+        else
+        {
+            BadLogger.LogDebug("Not webgl; using dtls");
+            _fishyUnityTransport.UseWebSockets = false;
+            connectionType = "dtls";
+        }
     }
 }
