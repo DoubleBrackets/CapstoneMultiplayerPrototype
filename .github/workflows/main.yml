@@ -5,12 +5,12 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PROJ_DIR: # Put Project Folder Name Here
-  PROJ_NAME: # Put Project Name here. Used for build output naming
+  PROJ_DIR: Prototype
+  PROJ_NAME: Prototype
   BUILD_NAME_PREFIX: Build
   BUILD_DIR: build
   BUTLER_LINK: https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default
-  ITCH_GAME_NAME: # itch_username/game_name e.g doublebrackets/funny-game
+  ITCH_GAME_NAME: doublebrackets/capstonemultiprototype
 
 
 on:
@@ -21,9 +21,9 @@ on:
       # Only build when these are changed by the push
       # Actions doesn't support env. variables in this section...
       # IMPORTANT: Manually type in the project directory raw name to replace 'PROJ_DIR_REPLACE' in the following 3 lines - this section doesn't support variables
-      - "PROJ_DIR_REPLACE/Assets/**"
-      - "PROJ_DIR_REPLACE/Packages/**"
-      - "PROJ_DIR_REPLACE/ProjectSettings/**"
+      - "Prototype/Assets/**"
+      - "Prototype/Packages/**"
+      - "Prototype/ProjectSettings/**"
   workflow_dispatch:
 
 jobs:
