@@ -189,13 +189,13 @@ public class NetworkProtag : NetworkBehaviour
     {
         ReconcileData data = new ReconcileData(_predictionRigidbody);
         Reconcile(data);
-        Debug.Log("Creating Reconcile for " + name);
+        BadLogger.LogTrace("Creating Reconcile for " + name, BadLogger.Actor.Server);
     }
     
     [Reconcile]
     private void Reconcile(ReconcileData data,  Channel channel = Channel.Unreliable)
     {
-        Debug.Log($"Reconciling {name}");
+        BadLogger.LogTrace($"Reconciling {name}", BadLogger.Actor.Client);
         _predictionRigidbody.Reconcile(data.PredictionRigidbody);
     }
 
