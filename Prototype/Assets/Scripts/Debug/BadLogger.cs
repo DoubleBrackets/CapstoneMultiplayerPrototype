@@ -22,7 +22,7 @@ public class BadLogger : MonoBehaviour
         Server
     }
 
-    public static Priority LogLevel = Priority.Info;
+    public static Priority LogLevel = Priority.Trace;
 
     public static void LogTrace(string message, Actor actor = Actor.None, Object context = null)
     {

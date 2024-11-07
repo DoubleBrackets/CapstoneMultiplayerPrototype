@@ -1,4 +1,5 @@
 using System;
+using FishNet;
 using FishNet.Object;
 using FishNet.Object.Prediction;
 using FishNet.Transporting;
@@ -12,6 +13,12 @@ public class NetworkProtag : NetworkBehaviour
 
     [SerializeField]
     private Transform _bodyAnchor;
+    
+    [SerializeField]
+    private Animator _animator;
+    
+    [SerializeField]
+    private SpriteRenderer _spriteRenderer;
 
     [System.Serializable]
     public struct MoveStats
@@ -128,7 +135,7 @@ public class NetworkProtag : NetworkBehaviour
 
     private void TimeManagerTickEventHandler()
     {
-        if (IsOwner)
+        if (HasAuthority)
         {
             MovementData data = new MovementData(_horizontalInput, _jumpInput);
             Replicate(data);
@@ -142,9 +149,6 @@ public class NetworkProtag : NetworkBehaviour
     private void TimeManagerPostTickEventHandler()
     {
         _jumpInput = false;
-        
-        // Only the server should be able to reconcile clients
-        if (!IsServerStarted) return;
 
         CreateReconcile();
     }
@@ -155,6 +159,8 @@ public class NetworkProtag : NetworkBehaviour
         ReplicateState replicateState = ReplicateState.Invalid, 
         Channel channel = Channel.Unreliable)
     {
+        BadLogger.LogTrace($"Replicating {replicateState} Horizontal: {data.Horizontal}, Jump: {data.Jump}");
+        
         var currentVel = _rb.linearVelocity;
 
         Vector2 desiredVel = currentVel;
@@ -166,7 +172,8 @@ public class NetworkProtag : NetworkBehaviour
         desiredVel.y += _moveStats.Gravity * 0.5f * Time.fixedDeltaTime;
         
 
-        if (data.Jump && UpdateGroundCheck())
+        bool isGrounded = UpdateGroundCheck();
+        if (data.Jump && isGrounded)
         {
             var jumpVel = Mathf.Sqrt( 2 * -_moveStats.Gravity * _moveStats.JumpHeight);
             _predictionRigidbody.AddForce(Vector2.up * jumpVel, ForceMode2D.Impulse);
@@ -183,19 +190,33 @@ public class NetworkProtag : NetworkBehaviour
 
         // _predictionRigidbody.Velocity(desiredVel);
         _predictionRigidbody.Simulate();
+
+        if (data.Horizontal > 0)
+        {
+            _spriteRenderer.flipX = false;
+        }
+        else if (data.Horizontal < 0)
+        {
+            _spriteRenderer.flipX = true;
+        }
+        
+        if (replicateState != ReplicateState.ReplayedFuture)
+        {
+            _animator.SetFloat("Speed", Mathf.Abs(_rb.linearVelocity.x));
+            _animator.SetBool("Air", !isGrounded);
+        }
     }
     
     public override void CreateReconcile()
     {
         ReconcileData data = new ReconcileData(_predictionRigidbody);
         Reconcile(data);
-        BadLogger.LogTrace("Creating Reconcile for " + name, BadLogger.Actor.Server);
     }
     
     [Reconcile]
     private void Reconcile(ReconcileData data,  Channel channel = Channel.Unreliable)
     {
-        BadLogger.LogTrace($"Reconciling {name}", BadLogger.Actor.Client);
+        // BadLogger.LogTrace($"Reconciling {name}", BadLogger.Actor.Client);
         _predictionRigidbody.Reconcile(data.PredictionRigidbody);
     }
 
