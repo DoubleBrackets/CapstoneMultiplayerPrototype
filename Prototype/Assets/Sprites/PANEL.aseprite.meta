@@ -158,8 +158,8 @@ ScriptedImporter:
       cellRect:
         x: 0
         y: 0
-        width: 100
-        height: 100
+        width: 32
+        height: 32
       spriteId: 68652904e032b82468d0e354bca9b8bc
     linkedCells: []
     parentIndex: -1
@@ -215,4 +215,4 @@ ScriptedImporter:
   generatePhysicsShape: 0
   secondarySpriteTextures: []
   spritePackingTag: 
-  canvasSize: {x: 100, y: 100}
+  canvasSize: {x: 32, y: 32}

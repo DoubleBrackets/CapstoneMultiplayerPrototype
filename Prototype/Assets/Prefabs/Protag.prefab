@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 659893493397798589}
   - component: {fileID: 5453173470615501801}
+  - component: {fileID: 923696894076353942}
   m_Layer: 7
   m_Name: Square
   m_TagString: Untagged
@@ -26,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 901009240292969721}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -77,7 +78,7 @@ SpriteRenderer:
   m_SortingLayerID: -288955301
   m_SortingLayer: 3
   m_SortingOrder: 0
-  m_Sprite: {fileID: 7482667652216324306, guid: f29b522d838aa1e49bb6bb2fe7660118, type: 3}
+  m_Sprite: {fileID: -435426162233551992, guid: 97702c0a443d40849b4de2dc4a705177, type: 3}
   m_Color: {r: 0.990566, g: 0.4719206, b: 0.47758177, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -88,6 +89,28 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!95 &923696894076353942
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 901009240292969721}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: a171ed8831bc693438ca13680a0da90e, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &2870825669331747009
 GameObject:
   m_ObjectHideFlags: 0
@@ -174,13 +197,15 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 7703328290281989573}
   _rb: {fileID: 6369859279696043880}
   _bodyAnchor: {fileID: 817786416974150726}
+  _animator: {fileID: 923696894076353942}
+  _spriteRenderer: {fileID: 5453173470615501801}
   _moveStats:
     MoveSpeed: 6
     MoveAccel: 45
     JumpHeight: 2.1
     Gravity: -35
     GroundCheckOffset: {x: 0, y: -0.69}
-    GroundCheckSize: {x: 0.8, y: 0.32}
+    GroundCheckSize: {x: 0.5, y: 0.32}
     GroundLayer:
       serializedVersion: 2
       m_Bits: 192
@@ -215,14 +240,14 @@ MonoBehaviour:
   _defaultDespawnType: 0
   NetworkObserver: {fileID: 0}
   _enablePrediction: 1
-  _predictionType: 2
+  _predictionType: 0
   _graphicalObject: {fileID: 659893493397798589}
   _detachGraphicalObject: 1
   _enableStateForwarding: 1
   _networkTransform: {fileID: 0}
   _ownerInterpolation: 1
   _ownerSmoothedProperties: 255
-  _adaptiveInterpolation: 4
+  _adaptiveInterpolation: 0
   _spectatorSmoothedProperties: 255
   _spectatorInterpolation: 2
   _enableTeleport: 1
@@ -305,7 +330,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.66, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2984799887258299081}
