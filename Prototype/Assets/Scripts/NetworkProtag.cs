@@ -86,6 +86,8 @@ public class NetworkProtag : NetworkBehaviour
     private float _horizontalInput;
     private bool _jumpInput;
     
+    private float _lastHorizontal;
+    
     private PredictionRigidbody2D _predictionRigidbody;
 
     private void Awake()
@@ -114,6 +116,7 @@ public class NetworkProtag : NetworkBehaviour
             c = Color.blue;
         
         GetComponentInChildren<SpriteRenderer>().color = c;
+        
     }
 
     public override void OnStopNetwork()
@@ -159,36 +162,40 @@ public class NetworkProtag : NetworkBehaviour
         ReplicateState replicateState = ReplicateState.Invalid, 
         Channel channel = Channel.Unreliable)
     {
-        BadLogger.LogTrace($"Replicating {replicateState} Horizontal: {data.Horizontal}, Jump: {data.Jump}");
+        BadLogger.LogTrace($"Replicating {replicateState} {data.Horizontal} {data.Jump} tick {data.GetTick()} {name}");
+        float delta = (float)TimeManager.TickDelta;
+        
+        float horizontal = data.Horizontal;
+        if (replicateState.IsFuture())
+        {
+            horizontal = _lastHorizontal;
+        }
+        else
+        {
+            _lastHorizontal = horizontal;
+        }
         
         var currentVel = _rb.linearVelocity;
 
         Vector2 desiredVel = currentVel;
         desiredVel.x = Mathf.MoveTowards(
             currentVel.x, 
-            data.Horizontal * _moveStats.MoveSpeed, 
-            _moveStats.MoveAccel * Time.fixedDeltaTime);
-        
-        desiredVel.y += _moveStats.Gravity * 0.5f * Time.fixedDeltaTime;
-        
+            horizontal * _moveStats.MoveSpeed, 
+            _moveStats.MoveAccel * delta);
 
         bool isGrounded = UpdateGroundCheck();
         if (data.Jump && isGrounded)
         {
             var jumpVel = Mathf.Sqrt( 2 * -_moveStats.Gravity * _moveStats.JumpHeight);
             _predictionRigidbody.AddForce(Vector2.up * jumpVel, ForceMode2D.Impulse);
-            desiredVel.y = jumpVel;
         }
         else
         {
             _predictionRigidbody.AddForce(Vector2.up * _moveStats.Gravity);
         }
         
-        desiredVel.y += _moveStats.Gravity * 0.5f * Time.fixedDeltaTime;
-        
         _predictionRigidbody.AddForce(Vector2.right * (desiredVel.x - currentVel.x), ForceMode2D.Impulse);
 
-        // _predictionRigidbody.Velocity(desiredVel);
         _predictionRigidbody.Simulate();
 
         if (data.Horizontal > 0)
@@ -209,6 +216,10 @@ public class NetworkProtag : NetworkBehaviour
     
     public override void CreateReconcile()
     {
+        if (!IsServerStarted)
+        {
+            return;
+        }
         ReconcileData data = new ReconcileData(_predictionRigidbody);
         Reconcile(data);
     }
@@ -216,7 +227,7 @@ public class NetworkProtag : NetworkBehaviour
     [Reconcile]
     private void Reconcile(ReconcileData data,  Channel channel = Channel.Unreliable)
     {
-        // BadLogger.LogTrace($"Reconciling {name}", BadLogger.Actor.Client);
+        BadLogger.LogTrace($"Reconciling {name} tick {data.GetTick()}", BadLogger.Actor.Client);
         _predictionRigidbody.Reconcile(data.PredictionRigidbody);
     }
 

@@ -241,7 +241,7 @@ MonoBehaviour:
   NetworkObserver: {fileID: 0}
   _enablePrediction: 1
   _predictionType: 0
-  _graphicalObject: {fileID: 659893493397798589}
+  _graphicalObject: {fileID: 3069279166276667940}
   _detachGraphicalObject: 1
   _enableStateForwarding: 1
   _networkTransform: {fileID: 0}
@@ -250,7 +250,7 @@ MonoBehaviour:
   _adaptiveInterpolation: 0
   _spectatorSmoothedProperties: 255
   _spectatorInterpolation: 2
-  _enableTeleport: 1
+  _enableTeleport: 0
   _teleportThreshold: 1
   <PrefabId>k__BackingField: 6
   <SpawnableCollectionId>k__BackingField: 0
