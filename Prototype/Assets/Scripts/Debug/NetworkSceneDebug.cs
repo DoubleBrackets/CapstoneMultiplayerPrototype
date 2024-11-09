@@ -4,6 +4,15 @@ using UnityEngine;
 
 public class NetworkSceneDebug : NetworkBehaviour
 {
+    private GUIStyle _style;
+
+    private void Awake()
+    {
+        _style = new GUIStyle();
+        _style.fontSize = 20;
+        _style.normal.textColor = Color.black;
+    }
+
     private void OnGUI()
     {
         if (ServerManager)
@@ -15,13 +24,19 @@ public class NetworkSceneDebug : NetworkBehaviour
                 var scene = pair.Key;
                 var conns = pair.Value;
                 
-                GUILayout.Label($"Scene: {scene.name}");
+                GUILayout.Label($"Scene: {scene.name}", _style);
                 
                 foreach (var conn in conns)
                 {
-                    GUILayout.Label($"Connection: {conn}");
+                    GUILayout.Label($"Connection: {conn}", _style);
                 }
             }
         }
+
+        if (IsClientInitialized)
+        {
+            GUILayout.Label($"Local Client: {LocalConnection.ClientId}" , _style);
+        }
     }
 }
+ 
