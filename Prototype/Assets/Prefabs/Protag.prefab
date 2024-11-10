@@ -249,7 +249,7 @@ MonoBehaviour:
   _ownerSmoothedProperties: 255
   _adaptiveInterpolation: 0
   _spectatorSmoothedProperties: 255
-  _spectatorInterpolation: 5
+  _spectatorInterpolation: 3
   _enableTeleport: 0
   _teleportThreshold: 1
   <PrefabId>k__BackingField: 6

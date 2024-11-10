@@ -211,10 +211,12 @@ public class NetworkProtag : NetworkBehaviour
         if (replicateState == ReplicateState.CurrentFuture)
         {
             horizontal = _lastHorizontal;
+            Debug.DrawLine(_rb.position, _rb.position + Vector2.up, Color.red, 2f);
         }
         else if (replicateState == ReplicateState.CurrentCreated)
         {
             _lastHorizontal = (int)horizontal;
+            Debug.DrawLine(_rb.position, _rb.position + Vector2.up, Color.green, 2f);
         }
 
         Vector2 currentVel = _rb.linearVelocity;
@@ -304,6 +306,7 @@ public class NetworkProtag : NetworkBehaviour
         BadLogger.LogTrace($"Reconciling {name} tick {data.GetTick()}", BadLogger.Actor.Client);
         Unfreeze();
         _predictionRigidbody.Reconcile(data.PredictionRigidbody);
+        Debug.DrawLine(_rb.position, _rb.position + Vector2.up, Color.yellow, 2f);
     }
 
     private bool UpdateGroundCheck()
