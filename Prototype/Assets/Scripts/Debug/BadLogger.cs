@@ -32,6 +32,11 @@ public class BadLogger : MonoBehaviour
             Application.SetStackTraceLogType(LogType.Log, StackTraceLogType.ScriptOnly);
         else
             Application.SetStackTraceLogType(LogType.Log, StackTraceLogType.None);
+
+        if (!Application.isEditor)
+        {
+            LogLevel = Priority.Warning;
+        }
     }
 
     public static void LogTrace(string message, Actor actor = Actor.None, Object context = null)
