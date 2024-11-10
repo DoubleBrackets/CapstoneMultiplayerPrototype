@@ -1,4 +1,5 @@
 using System;
+using FishNet.Component.Prediction;
 using FishNet.Object;
 using FishNet.Object.Prediction;
 using FishNet.Transporting;
@@ -92,10 +93,13 @@ public class NetworkProtag : NetworkBehaviour
 
     private float _horizontalInput;
     private bool _jumpInput;
-
-    private float _lastHorizontal;
-
+    
     private PredictionRigidbody2D _predictionRigidbody;
+    
+    private Rigidbody2DState _rbState;
+    private bool _frozen;
+    
+    private int _lastHorizontal;
 
     private void Awake()
     {
@@ -121,8 +125,8 @@ public class NetworkProtag : NetworkBehaviour
 
     public override void OnStartNetwork()
     {
-        TimeManager.OnTick += TimeManagerTickEventHandler;
-        TimeManager.OnPostTick += TimeManagerPostTickEventHandler;
+        TimeManager.OnTick += TimeManager_OnTick;
+        TimeManager.OnPostTick += TimeManager_PostTick;
 
         gameObject.name = "NetworkProtag";
         if (Owner.IsHost)
@@ -151,12 +155,13 @@ public class NetworkProtag : NetworkBehaviour
 
     public override void OnStopNetwork()
     {
-        TimeManager.OnTick -= TimeManagerTickEventHandler;
-        TimeManager.OnPostTick -= TimeManagerPostTickEventHandler;
+        TimeManager.OnTick -= TimeManager_OnTick;
+        TimeManager.OnPostTick -= TimeManager_PostTick;
     }
 
-    private void TimeManagerTickEventHandler()
+    private void TimeManager_OnTick()
     {
+        Unfreeze(); 
         if (HasAuthority)
         {
             var data = new MovementData(_horizontalInput, _jumpInput);
@@ -168,10 +173,9 @@ public class NetworkProtag : NetworkBehaviour
         }
     }
 
-    private void TimeManagerPostTickEventHandler()
+    private void TimeManager_PostTick()
     {
         _jumpInput = false;
-
         CreateReconcile();
     }
 
@@ -181,17 +185,25 @@ public class NetworkProtag : NetworkBehaviour
         ReplicateState replicateState = ReplicateState.Invalid,
         Channel channel = Channel.Unreliable)
     {
-        // BadLogger.LogTrace($"Replicating {replicateState} {data.Horizontal} {data.Jump} tick {data.GetTick()} {name}");
+        BadLogger.LogTrace($"Replicating {replicateState} {data.Horizontal} {data.Jump} tick {data.GetTick()} {name}");
         var delta = (float)TimeManager.TickDelta;
 
         float horizontal = data.Horizontal;
-        if (replicateState.IsFuture())
+        if (replicateState == ReplicateState.ReplayedFuture && !IsServerInitialized)
         {
-            horizontal = 0;
+            Freeze();
+            return;
         }
-        else
+
+        // If we're missing a packet, we'll just use the last horizontal input
+        // This is to smooth packet loss out on observers, since player movement is generally continuous
+        if (replicateState == ReplicateState.CurrentFuture)
         {
-            _lastHorizontal = horizontal;
+            horizontal = _lastHorizontal;
+        }
+        else if (replicateState == ReplicateState.CurrentCreated)
+        {
+            _lastHorizontal = (int)horizontal;
         }
 
         Vector2 currentVel = _rb.linearVelocity;
@@ -203,19 +215,20 @@ public class NetworkProtag : NetworkBehaviour
             _moveStats.MoveAccel * delta);
 
         bool isGrounded = UpdateGroundCheck();
-        if (data.Jump && isGrounded)
+        if (isGrounded)
         {
-            float jumpVel = Mathf.Sqrt(2 * -_moveStats.Gravity * _moveStats.JumpHeight);
-            _predictionRigidbody.AddForce(Vector2.up * jumpVel, ForceMode2D.Impulse);
+            if (data.Jump)
+            {
+                float jumpVel = Mathf.Sqrt(2 * -_moveStats.Gravity * _moveStats.JumpHeight);
+                desiredVel.y = jumpVel;
+            }
         }
         else
         {
-            _predictionRigidbody.AddForce(Vector2.up * _moveStats.Gravity);
+            desiredVel.y += _moveStats.Gravity * delta;
         }
 
-        _predictionRigidbody.AddForce(Vector2.right * (desiredVel.x - currentVel.x), ForceMode2D.Impulse);
-
-        _predictionRigidbody.Simulate();
+        _predictionRigidbody.Velocity(desiredVel);
 
         if (data.Horizontal > 0)
         {
@@ -231,6 +244,31 @@ public class NetworkProtag : NetworkBehaviour
             _animator.SetFloat("Speed", Mathf.Abs(_rb.linearVelocity.x));
             _animator.SetBool("Air", !isGrounded);
         }
+    }
+    
+    private void Freeze()
+    {
+        if (_frozen)
+        {
+            return;
+        }
+        BadLogger.LogTrace($"Freezing {name}", BadLogger.Actor.Client);
+        _frozen = true;
+        _rbState = new Rigidbody2DState(_rb);
+        _rb.simulated = false;
+    }
+    
+    private void Unfreeze()
+    {
+        if (!_frozen)
+        {
+            return;
+        }
+        BadLogger.LogTrace($"Unfreeze {name}", BadLogger.Actor.Client);
+
+        _frozen = false;
+        _rb.simulated = true;
+        _rb.SetState(_rbState);
     }
 
     public override void CreateReconcile()
@@ -248,6 +286,7 @@ public class NetworkProtag : NetworkBehaviour
     private void Reconcile(ReconcileData data, Channel channel = Channel.Unreliable)
     {
         BadLogger.LogTrace($"Reconciling {name} tick {data.GetTick()}", BadLogger.Actor.Client);
+        Unfreeze();
         _predictionRigidbody.Reconcile(data.PredictionRigidbody);
     }
 

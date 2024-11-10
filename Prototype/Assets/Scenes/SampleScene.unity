@@ -2723,8 +2723,8 @@ MonoBehaviour:
   _updateOrder: 0
   _timingType: 0
   _allowTickDropping: 1
-  _maximumFrameTicks: 3
-  _tickRate: 60
+  _maximumFrameTicks: 5
+  _tickRate: 50
   _pingInterval: 1
   _physicsMode: 1
 --- !u!114 &1252963041
@@ -2741,7 +2741,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _dropExcessiveReplicates: 1
   _maximumServerReplicates: 15
-  _createLocalStates: 0
+  _createLocalStates: 1
   _stateInterpolation: 1
   _stateOrder: 1
 --- !u!114 &1252963046
@@ -2787,9 +2787,9 @@ MonoBehaviour:
   _latencySimulator:
     _enabled: 0
     _simulateHost: 1
-    _latency: 0
-    _outOfOrder: 0
-    _packetLoss: 0
+    _latency: 200
+    _outOfOrder: 0.05000000074505806
+    _packetLoss: 0.05000000074505806
 --- !u!114 &1252963056
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3218,6 +3218,7 @@ GameObject:
   - component: {fileID: 1808278912}
   - component: {fileID: 1808278915}
   - component: {fileID: 1808278914}
+  - component: {fileID: 1808278916}
   m_Layer: 0
   m_Name: Debug
   m_TagString: Untagged
@@ -3288,7 +3289,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _color: {r: 0, g: 0, b: 0, a: 1}
   _placement: 1
-  _hideTickRate: 1
+  _hideTickRate: 0
 --- !u!114 &1808278914
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3353,6 +3354,18 @@ MonoBehaviour:
   _componentIndexCache: 255
   _addedNetworkObject: {fileID: 1808278914}
   _networkObjectCache: {fileID: 0}
+--- !u!114 &1808278916
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1808278909}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86cb6263127766942b014774eef344c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1882598281
 GameObject:
   m_ObjectHideFlags: 0
