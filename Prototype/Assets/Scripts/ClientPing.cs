@@ -4,6 +4,7 @@ using UnityEngine;
 public class ClientPing : NetworkBehaviour
 {
     private float timer;
+    private int _ping;
 
     // Update is called once per frame
     private void Update()
@@ -27,6 +28,6 @@ public class ClientPing : NetworkBehaviour
     [ServerRpc]
     public void Ping()
     {
-        Debug.Log("Ping");
+        _ping++;
     }
 }

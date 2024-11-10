@@ -547,6 +547,7 @@ namespace FishNet.Managing.Predicting
                         OnReplicateReplay?.Invoke(ClientReplayTick, ServerReplayTick);
                         if (timeManagerPhysics)
                         {
+                            // Debug.Log("Replay simulate physics");
                             Physics.Simulate(tickDelta);
                             Physics2D.Simulate(tickDelta);
                         }

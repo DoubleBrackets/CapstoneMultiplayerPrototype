@@ -714,6 +714,7 @@ namespace FishNet.Managing.Timing
                     {
                         OnPrePhysicsSimulation?.Invoke(tickDelta);
                         Physics.Simulate(tickDelta);
+                        // Debug.Log($"Simulating physics with delta {tickDelta}. Estimated server tick {Tick}. Local tick {LocalTick}.");
                         Physics2D.Simulate(tickDelta);
                         OnPostPhysicsSimulation?.Invoke(tickDelta);
                     }

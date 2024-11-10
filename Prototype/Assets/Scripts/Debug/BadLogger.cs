@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -23,6 +24,15 @@ public class BadLogger : MonoBehaviour
     }
 
     public static Priority LogLevel = Priority.Trace;
+    public static bool ShowTrace = true;
+
+    private void Awake()
+    {
+        if(ShowTrace)
+            Application.SetStackTraceLogType(LogType.Log, StackTraceLogType.ScriptOnly);
+        else
+            Application.SetStackTraceLogType(LogType.Log, StackTraceLogType.None);
+    }
 
     public static void LogTrace(string message, Actor actor = Actor.None, Object context = null)
     {
