@@ -51,13 +51,13 @@ public class NetworkProtag : NetworkBehaviour
 
     private struct ReconcileData : IReconcileData
     {
-        public readonly PredictionRigidbody2D PredictionRigidbody;
+        public readonly BasicRigidbody2DState Rigidbody2DState;
 
         private uint _tick;
 
-        public ReconcileData(PredictionRigidbody2D predictionRigidbody)
+        public ReconcileData(BasicRigidbody2DState rigidbody2DState)
         {
-            PredictionRigidbody = predictionRigidbody;
+            Rigidbody2DState = rigidbody2DState;
             _tick = 0;
         }
 
@@ -93,12 +93,12 @@ public class NetworkProtag : NetworkBehaviour
 
     private float _horizontalInput;
     private bool _jumpInput;
-    
+
     private PredictionRigidbody2D _predictionRigidbody;
-    
+
     private Rigidbody2DState _rbState;
     private bool _frozen;
-    
+
     private int _lastHorizontal;
 
     private void Awake()
@@ -127,7 +127,7 @@ public class NetworkProtag : NetworkBehaviour
     {
         TimeManager.OnTick += TimeManager_OnTick;
         TimeManager.OnPostTick += TimeManager_PostTick;
-        PredictionManager.OnPrePhysicsTransformSync +=  PredictionManager_OnPrePhysicsTransformSync;
+        PredictionManager.OnPrePhysicsTransformSync += PredictionManager_OnPrePhysicsTransformSync;
 
         gameObject.name = "NetworkProtag";
         if (Owner.IsHost)
@@ -172,7 +172,7 @@ public class NetworkProtag : NetworkBehaviour
 
     private void TimeManager_OnTick()
     {
-        Unfreeze(); 
+        Unfreeze();
         if (HasAuthority)
         {
             var data = new MovementData(_horizontalInput, _jumpInput);
@@ -240,12 +240,12 @@ public class NetworkProtag : NetworkBehaviour
         else
         {
             _predictionRigidbody.AddForce(Vector2.up * _moveStats.Gravity);
-           // desiredVel.y += _moveStats.Gravity * delta;
+            // desiredVel.y += _moveStats.Gravity * delta;
         }
 
         _predictionRigidbody.AddForce(Vector3.right * (desiredVel.x - currentVel.x), ForceMode2D.Impulse);
         // _predictionRigidbody.Velocity(desiredVel);
-        
+
         _predictionRigidbody.Simulate();
 
         if (data.Horizontal > 0)
@@ -263,25 +263,27 @@ public class NetworkProtag : NetworkBehaviour
             _animator.SetBool("Air", !isGrounded);
         }
     }
-    
+
     private void Freeze()
     {
         if (_frozen)
         {
             return;
         }
+
         BadLogger.LogTrace($"Freezing {name}", BadLogger.Actor.Client);
         _frozen = true;
         _rbState = new Rigidbody2DState(_rb);
         _rb.bodyType = RigidbodyType2D.Static;
     }
-    
+
     private void Unfreeze()
     {
         if (!_frozen)
         {
             return;
         }
+
         BadLogger.LogTrace($"Unfreeze {name}", BadLogger.Actor.Client);
 
         _frozen = false;
@@ -296,7 +298,7 @@ public class NetworkProtag : NetworkBehaviour
             return;
         }
 
-        var data = new ReconcileData(_predictionRigidbody);
+        var data = new ReconcileData(_rb.GetBasicState());
         Reconcile(data);
     }
 
@@ -305,7 +307,7 @@ public class NetworkProtag : NetworkBehaviour
     {
         BadLogger.LogTrace($"Reconciling {name} tick {data.GetTick()}", BadLogger.Actor.Client);
         Unfreeze();
-        _predictionRigidbody.Reconcile(data.PredictionRigidbody);
+        _rb.SetBasicState(data.Rigidbody2DState);
         Debug.DrawLine(_rb.position, _rb.position + Vector2.up, Color.yellow, 2f);
     }
 
