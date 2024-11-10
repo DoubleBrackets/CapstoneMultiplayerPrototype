@@ -18,7 +18,6 @@ public class ProtagSpawner : NetworkBehaviour
 
     private void Start()
     {
-        Debug.Log("AWAKE");
         NetworkManager.SceneManager.OnClientLoadedStartScenes += OnConnectedToServer;
     }
 
