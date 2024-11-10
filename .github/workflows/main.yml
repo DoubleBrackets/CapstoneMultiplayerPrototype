@@ -34,7 +34,7 @@ jobs:
         targetPlatform:
           - WebGL
           - StandaloneWindows64
-          # - StandaloneOSX
+          - StandaloneOSX
           # - StandaloneLinux64
     steps:
       - name: Delete huge unnecessary tools folder
