@@ -127,6 +127,7 @@ public class NetworkProtag : NetworkBehaviour
     {
         TimeManager.OnTick += TimeManager_OnTick;
         TimeManager.OnPostTick += TimeManager_PostTick;
+        PredictionManager.OnPrePhysicsTransformSync +=  PredictionManager_OnPrePhysicsTransformSync;
 
         gameObject.name = "NetworkProtag";
         if (Owner.IsHost)
@@ -157,6 +158,16 @@ public class NetworkProtag : NetworkBehaviour
     {
         TimeManager.OnTick -= TimeManager_OnTick;
         TimeManager.OnPostTick -= TimeManager_PostTick;
+        PredictionManager.OnPrePhysicsTransformSync -= PredictionManager_OnPrePhysicsTransformSync;
+    }
+
+    private void PredictionManager_OnPrePhysicsTransformSync(uint clienttick, uint servertick)
+    {
+        // Prevent strange collision behaviors during reconciliation when one body is not replicate replaying
+        if (!IsBehaviourReconciling)
+        {
+            Freeze();
+        }
     }
 
     private void TimeManager_OnTick()
@@ -220,15 +231,20 @@ public class NetworkProtag : NetworkBehaviour
             if (data.Jump)
             {
                 float jumpVel = Mathf.Sqrt(2 * -_moveStats.Gravity * _moveStats.JumpHeight);
-                desiredVel.y = jumpVel;
+                _predictionRigidbody.AddForce(Vector2.up * jumpVel, ForceMode2D.Impulse);
+                // desiredVel.y = jumpVel;
             }
         }
         else
         {
-            desiredVel.y += _moveStats.Gravity * delta;
+            _predictionRigidbody.AddForce(Vector2.up * _moveStats.Gravity);
+           // desiredVel.y += _moveStats.Gravity * delta;
         }
 
-        _predictionRigidbody.Velocity(desiredVel);
+        _predictionRigidbody.AddForce(Vector3.right * (desiredVel.x - currentVel.x), ForceMode2D.Impulse);
+        // _predictionRigidbody.Velocity(desiredVel);
+        
+        _predictionRigidbody.Simulate();
 
         if (data.Horizontal > 0)
         {
@@ -241,7 +257,7 @@ public class NetworkProtag : NetworkBehaviour
 
         if (replicateState != ReplicateState.ReplayedFuture)
         {
-            _animator.SetFloat("Speed", Mathf.Abs(_rb.linearVelocity.x));
+            _animator.SetFloat("Speed", Mathf.Abs(_rb.linearVelocity.x) * Mathf.Abs(horizontal));
             _animator.SetBool("Air", !isGrounded);
         }
     }
@@ -255,7 +271,7 @@ public class NetworkProtag : NetworkBehaviour
         BadLogger.LogTrace($"Freezing {name}", BadLogger.Actor.Client);
         _frozen = true;
         _rbState = new Rigidbody2DState(_rb);
-        _rb.simulated = false;
+        _rb.bodyType = RigidbodyType2D.Static;
     }
     
     private void Unfreeze()
@@ -267,7 +283,7 @@ public class NetworkProtag : NetworkBehaviour
         BadLogger.LogTrace($"Unfreeze {name}", BadLogger.Actor.Client);
 
         _frozen = false;
-        _rb.simulated = true;
+        _rb.bodyType = RigidbodyType2D.Dynamic;
         _rb.SetState(_rbState);
     }
 
