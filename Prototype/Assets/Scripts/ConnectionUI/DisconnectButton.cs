@@ -42,12 +42,17 @@ public class DisconnectButton : MonoBehaviour
 
     private void OnClientConnectionState(ClientConnectionStateArgs state)
     {
+        if (InstanceFinder.ServerManager.Started)
+        {
+            return;
+        }
+
         if (state.ConnectionState == LocalConnectionState.Started)
         {
             _disconnectButton.gameObject.SetActive(true);
             _disconnectText.text = "Disconnect";
         }
-        else if (state.ConnectionState == LocalConnectionState.Stopped)
+        else if (state.ConnectionState == LocalConnectionState.Stopping)
         {
             _disconnectButton.gameObject.SetActive(false);
         }

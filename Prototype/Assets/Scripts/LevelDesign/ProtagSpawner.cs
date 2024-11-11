@@ -8,18 +8,9 @@ public class ProtagSpawner : NetworkBehaviour
     private NetworkObject _networkPrefab;
 
     [SerializeField]
-    private NetworkObject _clientPingPrefab;
-
-    [SerializeField]
     private Transform _spawnPos;
 
     private NetworkObject _protag;
-    private NetworkObject _clientPing;
-
-    private void Start()
-    {
-        NetworkManager.SceneManager.OnClientLoadedStartScenes += OnConnectedToServer;
-    }
 
     private void Update()
     {
@@ -37,26 +28,6 @@ public class ProtagSpawner : NetworkBehaviour
                     _protag = null;
                 }
             }
-        }
-    }
-
-    private void OnDestroy()
-    {
-        if (NetworkManager.SceneManager != null)
-        {
-            NetworkManager.SceneManager.OnClientLoadedStartScenes -= OnConnectedToServer;
-        }
-    }
-
-    private void OnConnectedToServer(NetworkConnection conn, bool asServer)
-    {
-        if (asServer)
-        {
-            SceneManager.AddConnectionToScene(conn, UnityEngine.SceneManagement.SceneManager.GetActiveScene());
-
-            // Spawn client ping
-            NetworkObject clientPing = Instantiate(_clientPingPrefab);
-            Spawn(clientPing, conn);
         }
     }
 

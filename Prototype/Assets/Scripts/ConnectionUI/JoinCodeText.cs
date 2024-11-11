@@ -20,7 +20,7 @@ public class JoinCodeText : MonoBehaviour
         _serverManager = InstanceFinder.ServerManager;
         _relayManager.OnCreatedAllocationCodeRetrieved += OnCreatedAllocationCodeRetrieved;
         _serverManager.OnServerConnectionState += OnServerConnectionState;
-
+        InstanceFinder.ClientManager.OnClientConnectionState += OnClientConnectionState;
         UnityServiceFinder.RelayManager.OnJoinAllocation += OnJoinAllocation;
 
         _joinCodeText.text = NoGameRunning;
@@ -30,7 +30,7 @@ public class JoinCodeText : MonoBehaviour
     {
         _relayManager.OnCreatedAllocationCodeRetrieved -= OnCreatedAllocationCodeRetrieved;
         _serverManager.OnServerConnectionState -= OnServerConnectionState;
-
+        InstanceFinder.ClientManager.OnClientConnectionState -= OnClientConnectionState;
         UnityServiceFinder.RelayManager.OnJoinAllocation -= OnJoinAllocation;
     }
 
@@ -45,6 +45,14 @@ public class JoinCodeText : MonoBehaviour
     private void OnServerConnectionState(ServerConnectionStateArgs state)
     {
         if (state.ConnectionState == LocalConnectionState.Stopping)
+        {
+            _joinCodeText.text = NoGameRunning;
+        }
+    }
+
+    private void OnClientConnectionState(ClientConnectionStateArgs state)
+    {
+        if (state.ConnectionState == LocalConnectionState.Stopped)
         {
             _joinCodeText.text = NoGameRunning;
         }
