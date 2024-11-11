@@ -3,12 +3,20 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "test.tmx",
+    "activeFile": "prototypingTileset16x16.tsx",
     "expandedProjectPaths": [
         "."
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
+        "Flowers.tmx": {
+            "scale": 1.5,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 387,
+                "y": -263.3333333333333
+            }
+        },
         "WaitingRoom.tmx": {
             "scale": 2,
             "selectedLayer": 0,
@@ -18,7 +26,7 @@
             }
         },
         "prototypingTileset16x16.tsx": {
-            "scaleInDock": 1,
+            "scaleInDock": 3,
             "scaleInEditor": 8
         },
         "test.tmx": {
@@ -35,12 +43,16 @@
     "map.lastUsedFormat": "tmx",
     "openFiles": [
         "test.tmx",
-        "prototypingTileset16x16.tsx"
+        "prototypingTileset16x16.tsx",
+        "WaitingRoom.tmx",
+        "Flowers.tmx"
     ],
     "project": "proto.tiled-project",
     "recentFiles": [
-        "prototypingTileset16x16.tsx",
-        "test.tmx"
+        "test.tmx",
+        "Flowers.tmx",
+        "WaitingRoom.tmx",
+        "prototypingTileset16x16.tsx"
     ],
     "tileset.lastUsedFormat": "tsx",
     "tileset.tileSize": {
