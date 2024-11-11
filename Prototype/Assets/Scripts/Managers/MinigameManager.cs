@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using FishNet;
 using FishNet.Managing.Scened;
 using FishNet.Managing.Server;
+using FishNet.Object;
 using FishNet.Transporting;
-using GameKit.Dependencies.Utilities.Types;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using SceneManager = UnityEngine.SceneManagement.SceneManager;
@@ -11,14 +13,17 @@ using SceneManager = UnityEngine.SceneManagement.SceneManager;
 public class MinigameManager : MonoBehaviour
 {
     [SerializeField]
-    [Scene]
-    private List<string> _minigameScenes;
-
-    [SerializeField]
-    [Scene]
-    private string _mainMenuScene;
+    private MinigameListSO _minigameList;
 
     public static MinigameManager Instance { get; private set; }
+
+    public IReadOnlyList<string> MinigameScenes => _minigameList.MinigameScenes;
+
+    public event Action OnMiniGameLoaded;
+
+    private bool _loading;
+
+    private string _currentMinigameScene;
 
     private void Awake()
     {
@@ -48,19 +53,19 @@ public class MinigameManager : MonoBehaviour
     {
         if (state.ConnectionState == LocalConnectionState.Stopped)
         {
-            SceneManager.LoadScene(_mainMenuScene);
+            SceneManager.LoadScene(_minigameList.MainMenuScene);
         }
         else if (state.ConnectionState == LocalConnectionState.Started)
         {
             InstanceFinder.SceneManager.OnLoadEnd += UnloadMainMenu;
-            LoadMinigame(0);
+            LoadMinigame(-1);
         }
     }
 
     private void UnloadMainMenu(SceneLoadEndEventArgs args)
     {
         InstanceFinder.SceneManager.OnLoadEnd -= UnloadMainMenu;
-        Scene scene = SceneManager.GetSceneByPath(_mainMenuScene);
+        Scene scene = SceneManager.GetSceneByPath(_minigameList.MainMenuScene);
         SceneManager.UnloadSceneAsync(scene);
     }
 
@@ -68,7 +73,9 @@ public class MinigameManager : MonoBehaviour
     {
         if (state.ConnectionState == LocalConnectionState.Stopped && !InstanceFinder.ServerManager.Started)
         {
-            SceneManager.LoadScene(_mainMenuScene);
+            _loading = false;
+            _currentMinigameScene = null;
+            SceneManager.LoadScene(_minigameList.MainMenuScene);
         }
 
         if (state.ConnectionState == LocalConnectionState.Started)
@@ -79,14 +86,55 @@ public class MinigameManager : MonoBehaviour
 
     public void ChangeMinigames(int index)
     {
+        if (!InstanceFinder.ServerManager.Started || _loading)
+        {
+            return;
+        }
+
+        _loading = true;
+
         UnloadMinigame();
         LoadMinigame(index);
+
+        InstanceFinder.SceneManager.OnLoadEnd += OnMinigameLoaded;
+    }
+
+    private void OnMinigameLoaded(SceneLoadEndEventArgs arg)
+    {
+        InstanceFinder.SceneManager.OnLoadEnd -= OnMinigameLoaded;
+        _loading = false;
+        BadLogger.LogDebug("Minigame loaded!", BadLogger.Actor.Server);
+        OnMiniGameLoaded?.Invoke();
     }
 
     private void UnloadMinigame()
     {
-        var sceneUnloadData = new SceneUnloadData(SceneManager.GetActiveScene());
+        if (string.IsNullOrEmpty(_currentMinigameScene))
+        {
+            return;
+        }
+
+        DespawnAllSceneObjects(_currentMinigameScene);
+
+        var sceneUnloadData = new SceneUnloadData(_currentMinigameScene);
+
+        BadLogger.LogInfo($"Unloading {_currentMinigameScene}");
+
         InstanceFinder.SceneManager.UnloadGlobalScenes(sceneUnloadData);
+    }
+
+    private void DespawnAllSceneObjects(string scene)
+    {
+        BadLogger.LogInfo($"Despawning all objects in {scene}");
+
+        GameObject[] gameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
+
+        List<NetworkObject> nobs = gameObjects.SelectMany(a => a.GetComponentsInChildren<NetworkObject>()).ToList();
+
+        foreach (NetworkObject no in nobs)
+        {
+            InstanceFinder.ServerManager.Despawn(no);
+        }
     }
 
     private void LoadMinigame(int index)
@@ -97,8 +145,12 @@ public class MinigameManager : MonoBehaviour
             return;
         }
 
-        string scene = _minigameScenes[index];
+        string scene = index == -1 ? _minigameList.StartScene : _minigameList.MinigameScenes[index];
         var sceneLoadData = new SceneLoadData(scene);
+        sceneLoadData.Options.AutomaticallyUnload = true;
+        sceneLoadData.PreferredActiveScene = new PreferredScene(new SceneLookupData(scene));
+
         InstanceFinder.SceneManager.LoadGlobalScenes(sceneLoadData);
+        _currentMinigameScene = scene;
     }
 }
