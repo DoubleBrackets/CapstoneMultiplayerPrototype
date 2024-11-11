@@ -1,42 +1,54 @@
-using System;
-using FishNet.Object;
+using System.Collections.Generic;
+using FishNet;
+using FishNet.Connection;
+using FishNet.Managing.Client;
+using FishNet.Managing.Server;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
-public class NetworkSceneDebug : NetworkBehaviour
+public class NetworkSceneDebug : MonoBehaviour
 {
+    [SerializeField]
+    private int _fontSize;
+
+    [SerializeField]
+    private Color _color;
+
     private GUIStyle _style;
 
     private void Awake()
     {
         _style = new GUIStyle();
-        _style.fontSize = 20;
-        _style.normal.textColor = Color.black;
+        _style.fontSize = _fontSize;
+        _style.normal.textColor = _color;
     }
 
     private void OnGUI()
     {
-        if (ServerManager)
+        ServerManager serverManager = InstanceFinder.ServerManager;
+        if (serverManager)
         {
-            var sceneConnections = SceneManager.SceneConnections;
+            Dictionary<Scene, HashSet<NetworkConnection>> sceneConnections =
+                InstanceFinder.SceneManager.SceneConnections;
 
-            foreach (var pair in sceneConnections)
+            foreach (KeyValuePair<Scene, HashSet<NetworkConnection>> pair in sceneConnections)
             {
-                var scene = pair.Key;
-                var conns = pair.Value;
-                
+                Scene scene = pair.Key;
+                HashSet<NetworkConnection> conns = pair.Value;
+
                 GUILayout.Label($"Scene: {scene.name}", _style);
-                
-                foreach (var conn in conns)
+
+                foreach (NetworkConnection conn in conns)
                 {
                     GUILayout.Label($"Connection: {conn}", _style);
                 }
             }
         }
 
-        if (IsClientInitialized)
+        ClientManager clientManager = InstanceFinder.ClientManager;
+        if (clientManager.Started)
         {
-            GUILayout.Label($"Local Client: {LocalConnection.ClientId}" , _style);
+            GUILayout.Label($"Local Client: {clientManager.Connection.ClientId}", _style);
         }
     }
 }
- 

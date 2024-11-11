@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Unity.Services.Authentication;
@@ -10,33 +11,42 @@ using UnityEngine;
 /// </summary>
 public class UnityServiceManager : MonoBehaviour
 {
+    public delegate void UnityServicesStateChangedHandler(
+        ServicesInitializationState previousState,
+        ServicesInitializationState newState);
+
+    public static List<UnityServiceManager> Instances { get; set; } = new();
+
+    public event UnityServicesStateChangedHandler UnityServicesStateChanged;
+
     private bool _isTryingToInitialize;
     private ServicesInitializationState _unityServicesState;
-    
-    public delegate void UnityServicesStateChangedHandler(
-        ServicesInitializationState previousState, 
-        ServicesInitializationState newState);
-    
-    public event UnityServicesStateChangedHandler UnityServicesStateChanged;
 
     protected void Awake()
     {
+        Instances.Add(this);
         TryInitializeUnityServices(gameObject.GetCancellationTokenOnDestroy()).Forget();
     }
 
     private void Update()
     {
-        var newState = UnityServices.State;
+        ServicesInitializationState newState = UnityServices.State;
         if (newState != _unityServicesState)
         {
             UnityServicesStateChanged?.Invoke(_unityServicesState, newState);
             BadLogger.LogTrace($"Unity Services state changed from {_unityServicesState} to {newState}");
         }
+
         _unityServicesState = UnityServices.State;
     }
 
+    protected void OnDestroy()
+    {
+        Instances.Remove(this);
+    }
+
     /// <summary>
-    /// Block until Unity Services are initialized. Signs in anonymously if not already signed in.
+    ///     Block until Unity Services are initialized. Signs in anonymously if not already signed in.
     /// </summary>
     /// <param name="token"></param>
     public async UniTask WaitForInitialization(CancellationToken token)
@@ -75,14 +85,15 @@ public class UnityServiceManager : MonoBehaviour
             BadLogger.LogTrace("Initializing Unity Services");
 
             await UnityServices.InitializeAsync();
-            
+
             token.ThrowIfCancellationRequested();
 
             if (!AuthenticationService.Instance.IsSignedIn)
             {
                 BadLogger.LogTrace("Signing in anonymously");
                 await AuthenticationService.Instance.SignInAnonymouslyAsync();
-                BadLogger.LogTrace($"Signed in anonymously successfully with id {AuthenticationService.Instance.PlayerId}");
+                BadLogger.LogTrace(
+                    $"Signed in anonymously successfully with id {AuthenticationService.Instance.PlayerId}");
             }
         }
         catch (Exception e)
