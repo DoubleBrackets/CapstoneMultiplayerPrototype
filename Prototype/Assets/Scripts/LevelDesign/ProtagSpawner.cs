@@ -42,7 +42,10 @@ public class ProtagSpawner : NetworkBehaviour
 
     private void OnDestroy()
     {
-        NetworkManager.SceneManager.OnClientLoadedStartScenes -= OnConnectedToServer;
+        if (NetworkManager.SceneManager != null)
+        {
+            NetworkManager.SceneManager.OnClientLoadedStartScenes -= OnConnectedToServer;
+        }
     }
 
     private void OnConnectedToServer(NetworkConnection conn, bool asServer)

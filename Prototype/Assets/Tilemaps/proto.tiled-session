@@ -14,11 +14,11 @@
             "scaleInEditor": 8
         },
         "test.tmx": {
-            "scale": 4,
+            "scale": 1.5,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 553.375,
-                "y": -356.5
+                "x": 379.66666666666663,
+                "y": -389.3333333333333
             }
         }
     },
@@ -27,7 +27,6 @@
     "map.lastUsedFormat": "tmx",
     "openFiles": [
         "test.tmx",
-        "prototypingTileset16x16.tsx",
         "prototypingTileset16x16.tsx"
     ],
     "project": "proto.tiled-project",

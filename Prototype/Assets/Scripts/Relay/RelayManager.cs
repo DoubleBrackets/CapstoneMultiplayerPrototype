@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using FishNet;
-using FishNet.Managing.Server;
 using FishNet.Transporting.UTP;
 using Unity.Networking.Transport.Relay;
 using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
-using Unity.VisualScripting;
 using UnityEngine;
 
 /// <summary>
@@ -16,12 +14,33 @@ using UnityEngine;
 /// </summary>
 public class RelayManager : MonoBehaviour
 {
-    private enum RelayState
+    public struct JoinAllocationEventData
     {
-        Disconnected,
-        Host,
-        Client
+        public bool DidSucceed;
+        public string JoinCode;
+        public string FailureReason;
+
+        public JoinAllocationEventData(bool didSucceed, string joinCode = "", string failureReason = "")
+        {
+            DidSucceed = didSucceed;
+            JoinCode = joinCode;
+            FailureReason = failureReason;
+        }
     }
+
+    public struct CreateAllocationEventData
+    {
+        public bool DidSucceed;
+        public string FailureReason;
+
+        public CreateAllocationEventData(bool result, string failureReason = "")
+        {
+            DidSucceed = result;
+            FailureReason = failureReason;
+        }
+    }
+
+    public const int MaxPlayers = 4;
 
     [SerializeField]
     private UnityServiceManager _unityCloudManager;
@@ -29,14 +48,31 @@ public class RelayManager : MonoBehaviour
     [SerializeField]
     private FishyUnityTransport _fishyUnityTransport;
 
+    public static List<RelayManager> Instances { get; } = new();
+
     public string JoinCode { get; private set; }
 
-    public string RegionId => _currentAllocation?.Region ?? _currentJoinAllocation?.Region;
+    public string RegionId => _currentCreatedAllocation?.Region ?? _currentJoinAllocation?.Region;
 
-    private Allocation _currentAllocation;
+    public event Action<CreateAllocationEventData> OnCreateAllocation;
+
+    public event Action<string> OnCreatedAllocationCodeRetrieved;
+    public event Action<JoinAllocationEventData> OnJoinAllocation;
+
+    private Allocation _currentCreatedAllocation;
     private JoinAllocation _currentJoinAllocation;
 
-    private RelayState _relayState = RelayState.Disconnected;
+    private bool _inAllocationProgress;
+
+    private void Awake()
+    {
+        Instances.Add(this);
+    }
+
+    private void OnDestroy()
+    {
+        Instances.Remove(this);
+    }
 
     /// <summary>
     ///     Get a list of regions from the relay service
@@ -69,47 +105,94 @@ public class RelayManager : MonoBehaviour
     /// <returns></returns>
     public async UniTask<string> HostGameAsync(string regionId, CancellationToken token)
     {
+        Debug.Log("s");
+        if (_inAllocationProgress || InstanceFinder.ServerManager.Started)
+        {
+            BadLogger.LogDebug("Already in allocation progress");
+            return null;
+        }
+
         BadLogger.LogDebug($"Trying to host on region {regionId}");
+
+        _inAllocationProgress = true;
         try
         {
             await _unityCloudManager.WaitForInitialization(token);
-            
-            _currentAllocation = await RelayService.Instance.CreateAllocationAsync(4, regionId);
-            
+
+            _currentCreatedAllocation =
+                await RelayService.Instance.CreateAllocationAsync(MaxPlayers, regionId);
+
             token.ThrowIfCancellationRequested();
 
-            string joinCode =
-                await RelayService.Instance.GetJoinCodeAsync(_currentAllocation.AllocationId);
-            
-            BadLogger.LogDebug($"Created Relay with id {_currentAllocation.AllocationId} " +
-                          $"and code {joinCode} in region {_currentAllocation.Region}");
-            
+            OnCreateAllocation?.Invoke(new CreateAllocationEventData(true));
+
+            BadLogger.LogDebug($"Created Relay with id {_currentCreatedAllocation.AllocationId} in region {regionId}");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError(e);
+            _fishyUnityTransport.Shutdown();
+
+            if (e is RelayServiceException relayServiceException)
+            {
+                OnCreateAllocation?.Invoke(
+                    new CreateAllocationEventData(false, relayServiceException.Reason.ToString()));
+            }
+            else
+            {
+                OnCreateAllocation?.Invoke(new CreateAllocationEventData(false, "Exception thrown"));
+            }
+
+            _inAllocationProgress = false;
+            throw;
+        }
+
+        string joinCode = null;
+        try
+        {
+            joinCode =
+                await RelayService.Instance.GetJoinCodeAsync(_currentCreatedAllocation.AllocationId);
+
             token.ThrowIfCancellationRequested();
 
             // Codes are case insensitive, leave as upper since it's easier to read
             JoinCode = joinCode;
-            
+
             // Copy to clipboard
             GUIUtility.systemCopyBuffer = joinCode;
-            
-            SetupTransport(_currentAllocation);
 
-            _relayState = RelayState.Host;
+            OnCreatedAllocationCodeRetrieved?.Invoke(joinCode);
+        }
+        catch (Exception e)
+        {
+            OnCreatedAllocationCodeRetrieved?.Invoke("Failed to get join code");
+            Debug.LogError(e);
+            _fishyUnityTransport.Shutdown();
+            _inAllocationProgress = false;
+
+            throw;
+        }
+
+        try
+        {
+            SetupTransport(_currentCreatedAllocation);
 
             // Host is both server and client
             if (InstanceFinder.ServerManager.StartConnection())
             {
                 InstanceFinder.ClientManager.StartConnection();
             }
-
-            return JoinCode;
         }
         catch (Exception e)
         {
             Debug.LogError(e);
             _fishyUnityTransport.Shutdown();
+            _inAllocationProgress = false;
             throw;
         }
+
+        _inAllocationProgress = false;
+        return JoinCode;
     }
 
     /// <summary>
@@ -120,35 +203,71 @@ public class RelayManager : MonoBehaviour
     /// <param name="token"></param>
     public async UniTask JoinGameAsync(string joinCode, CancellationToken token)
     {
+        if (_inAllocationProgress || InstanceFinder.ClientManager.Started)
+        {
+            BadLogger.LogDebug("Already in allocation progress");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(joinCode) || joinCode.Length != 6)
+        {
+            OnJoinAllocation?.Invoke(
+                new JoinAllocationEventData(false, joinCode, "Invalid Join Code!"));
+            return;
+        }
+
+        _inAllocationProgress = true;
+
         try
         {
             await _unityCloudManager.WaitForInitialization(token);
-            
+
             BadLogger.LogDebug($"Trying to join with code {joinCode}");
 
             _currentJoinAllocation = await RelayService.Instance.JoinAllocationAsync(joinCode);
-        
+
             token.ThrowIfCancellationRequested();
 
-            SetupTransport(_currentJoinAllocation);
-        
             BadLogger.LogDebug(_currentJoinAllocation.ToString());
-
             BadLogger.LogDebug($"Joined Relay with id {_currentJoinAllocation.AllocationId} " +
                                $"and code {joinCode} in region {_currentJoinAllocation.Region}");
 
+            OnJoinAllocation?.Invoke(new JoinAllocationEventData(true, joinCode));
+        }
+        catch (Exception e)
+        {
+            Debug.LogError(e);
+
+            if (e is RelayServiceException relayServiceException)
+            {
+                OnJoinAllocation?.Invoke(
+                    new JoinAllocationEventData(false, failureReason: relayServiceException.Reason.ToString()));
+            }
+            else
+            {
+                OnJoinAllocation?.Invoke(new JoinAllocationEventData(false, "", "Exception thrown"));
+            }
+
+            _fishyUnityTransport.Shutdown();
+            _inAllocationProgress = false;
+            throw;
+        }
+
+        try
+        {
+            SetupTransport(_currentJoinAllocation);
             JoinCode = joinCode;
-
-            _relayState = RelayState.Client;
-
             InstanceFinder.ClientManager.StartConnection();
         }
         catch (Exception e)
         {
             Debug.LogError(e);
             _fishyUnityTransport.Shutdown();
+            _inAllocationProgress = false;
             throw;
         }
+
+        _inAllocationProgress = false;
     }
 
     private void SetupTransport(Allocation allocation)
@@ -165,7 +284,7 @@ public class RelayManager : MonoBehaviour
 
     private void ConfigureTransportType(out string connectionType)
     {
-        bool isWebGL = false;
+        var isWebGL = false;
 #if UNITY_WEBGL && !UNITY_EDITOR
         isWebGL = true;
 #endif
