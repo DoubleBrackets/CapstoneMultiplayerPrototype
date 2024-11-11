@@ -105,7 +105,6 @@ public class RelayManager : MonoBehaviour
     /// <returns></returns>
     public async UniTask<string> HostGameAsync(string regionId, CancellationToken token)
     {
-        Debug.Log("s");
         if (_inAllocationProgress || InstanceFinder.ServerManager.Started)
         {
             BadLogger.LogDebug("Already in allocation progress");

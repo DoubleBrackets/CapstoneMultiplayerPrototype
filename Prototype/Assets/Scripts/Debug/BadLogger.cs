@@ -1,9 +1,8 @@
-using System;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
 /// <summary>
-/// Simple logging utility
+///     Simple logging utility
 /// </summary>
 public class BadLogger : MonoBehaviour
 {
@@ -28,14 +27,18 @@ public class BadLogger : MonoBehaviour
 
     private void Awake()
     {
-        if(ShowTrace)
+        if (ShowTrace)
+        {
             Application.SetStackTraceLogType(LogType.Log, StackTraceLogType.ScriptOnly);
+        }
         else
+        {
             Application.SetStackTraceLogType(LogType.Log, StackTraceLogType.None);
+        }
 
         if (!Application.isEditor)
         {
-            LogLevel = Priority.Warning;
+            LogLevel = Priority.Debug;
         }
     }
 
