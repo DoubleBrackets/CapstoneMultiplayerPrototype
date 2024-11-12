@@ -12,7 +12,7 @@ public class LogGUI : MonoBehaviour
     private void Awake()
     {
         _logText.text = string.Empty;
-        BadLogger.LogDebug("Started up logging.");
+        BadLogger.LogDebug("Started up logging UI.");
         _debugObject.SetActive(Application.isEditor);
     }
 

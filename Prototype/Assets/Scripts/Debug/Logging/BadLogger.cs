@@ -36,9 +36,10 @@ public class BadLogger : MonoBehaviour
             Application.SetStackTraceLogType(LogType.Log, StackTraceLogType.None);
         }
 
+        LogInfo("Is editor: " + Application.isEditor);
         if (!Application.isEditor)
         {
-            Debug.Log("Switching to Debug level logging in builds");
+            LogInfo("Switching to Debug level logging in builds");
             LogLevel = Priority.Debug;
         }
     }
