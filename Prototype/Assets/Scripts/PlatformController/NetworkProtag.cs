@@ -91,6 +91,8 @@ public class NetworkProtag : NetworkBehaviour
     [SerializeField]
     private MoveStats _moveStats;
 
+    public event Action OnJump;
+
     private float _horizontalInput;
     private bool _jumpInput;
 
@@ -235,6 +237,11 @@ public class NetworkProtag : NetworkBehaviour
                 float jumpVel = Mathf.Sqrt(2 * -_moveStats.Gravity * _moveStats.JumpHeight);
                 _predictionRigidbody.AddForce(Vector2.up * jumpVel, ForceMode2D.Impulse);
                 // desiredVel.y = jumpVel;
+
+                if (replicateState == ReplicateState.CurrentCreated)
+                {
+                    OnJump?.Invoke();
+                }
             }
         }
         else

@@ -22,7 +22,7 @@ public class BadLogger : MonoBehaviour
         Server
     }
 
-    public static Priority LogLevel = Priority.Trace;
+    public static Priority LogLevel = Priority.Debug;
     public static bool ShowTrace = true;
 
     private void Awake()

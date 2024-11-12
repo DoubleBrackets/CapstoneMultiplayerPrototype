@@ -583,6 +583,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
+  _initializedValusSet: 0
   NetworkObserver: {fileID: 0}
   _enablePrediction: 0
   _predictionType: 0
@@ -620,7 +621,7 @@ MonoBehaviour:
   _componentIndexCache: 255
   _addedNetworkObject: {fileID: 1882598283}
   _networkObjectCache: {fileID: 0}
-  _networkPrefab: {fileID: 7703328290281989573, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
+  _networkPrefab: {fileID: 8160173228532262549, guid: 05469d1372f80b2449af5e1ee6324522, type: 3}
   _spawnPos: {fileID: 1882598282}
 --- !u!1 &1932782486
 GameObject:
