@@ -294,7 +294,7 @@ public class RelayManager : MonoBehaviour
 #endif
         if (isWebGL)
         {
-            BadLogger.LogTrace("WebGL; using wss");
+            BadLogger.LogDebug("WebGL; using wss");
             _fishyUnityTransport.UseWebSockets = true;
             connectionType = "wss";
         }

@@ -34,7 +34,7 @@ public class UnityServiceManager : MonoBehaviour
         if (newState != _unityServicesState)
         {
             UnityServicesStateChanged?.Invoke(_unityServicesState, newState);
-            BadLogger.LogTrace($"Unity Services state changed from {_unityServicesState} to {newState}");
+            BadLogger.LogDebug($"Unity Services state changed from {_unityServicesState} to {newState}");
         }
 
         _unityServicesState = UnityServices.State;
@@ -82,7 +82,7 @@ public class UnityServiceManager : MonoBehaviour
                 return;
             }
 
-            BadLogger.LogTrace("Initializing Unity Services");
+            BadLogger.LogDebug("Initializing Unity Services");
 
             await UnityServices.InitializeAsync();
 
@@ -90,9 +90,9 @@ public class UnityServiceManager : MonoBehaviour
 
             if (!AuthenticationService.Instance.IsSignedIn)
             {
-                BadLogger.LogTrace("Signing in anonymously");
+                BadLogger.LogDebug("Signing in anonymously");
                 await AuthenticationService.Instance.SignInAnonymouslyAsync();
-                BadLogger.LogTrace(
+                BadLogger.LogDebug(
                     $"Signed in anonymously successfully with id {AuthenticationService.Instance.PlayerId}");
             }
         }

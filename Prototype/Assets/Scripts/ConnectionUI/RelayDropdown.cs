@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using Cysharp.Threading.Tasks;
 using TMPro;
 using Unity.Services.Relay.Models;
 using UnityEngine;
@@ -14,18 +12,18 @@ public class RelayDropdown : MonoBehaviour
 
     [SerializeField]
     private TMP_Dropdown _regionDropdown;
-    
-    public event Action<string> RegionSelected;
 
     public string RegionId
     {
         get
         {
             string id = _regionDropdown.options[_regionDropdown.value].text;
-            return id == AutoRegion ? String.Empty : id;
+            return id == AutoRegion ? string.Empty : id;
         }
     }
-    
+
+    public event Action<string> RegionSelected;
+
     private void Awake()
     {
         _regionDropdown.onValueChanged.AddListener(OnRegionDropdownValueChanged);
@@ -39,7 +37,7 @@ public class RelayDropdown : MonoBehaviour
     private void OnRegionDropdownValueChanged(int index)
     {
         string selectedRegion = _regionDropdown.options[index].text;
-        BadLogger.LogTrace($"Selected region: {selectedRegion}");
+        BadLogger.LogDebug($"Selected region: {selectedRegion}");
         RegionSelected?.Invoke(selectedRegion);
         PlayerPrefs.SetString(PreferredRegionKey, selectedRegion);
     }
@@ -67,7 +65,7 @@ public class RelayDropdown : MonoBehaviour
             throw;
         }
     }
-    
+
     /// <summary>
     ///     Select player's preferred region from playerdata
     /// </summary>
