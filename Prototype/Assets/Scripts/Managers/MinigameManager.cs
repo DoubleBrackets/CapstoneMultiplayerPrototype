@@ -39,6 +39,7 @@ public class MinigameManager : MonoBehaviour
 
     private void Start()
     {
+        BadLogger.LogDebug("Minigame manager subscribing to connection events");
         InstanceFinder.ServerManager.OnServerConnectionState += OnServerConnectionState;
         InstanceFinder.ClientManager.OnClientConnectionState += OnClientConnectionState;
     }
@@ -51,6 +52,8 @@ public class MinigameManager : MonoBehaviour
 
     private void OnServerConnectionState(ServerConnectionStateArgs state)
     {
+        BadLogger.LogDebug($"MinigameManager: Server connection state: {state.ConnectionState}",
+            BadLogger.Actor.Server);
         if (state.ConnectionState == LocalConnectionState.Stopped)
         {
             SceneManager.LoadScene(_minigameList.MainMenuScene);
@@ -146,6 +149,9 @@ public class MinigameManager : MonoBehaviour
         }
 
         string scene = index == -1 ? _minigameList.StartScene : _minigameList.MinigameScenes[index];
+
+        BadLogger.LogInfo($"Loading minigame {index} {scene}");
+
         var sceneLoadData = new SceneLoadData(scene);
         sceneLoadData.Options.AutomaticallyUnload = true;
         sceneLoadData.PreferredActiveScene = new PreferredScene(new SceneLookupData(scene));

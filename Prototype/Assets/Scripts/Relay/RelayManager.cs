@@ -160,6 +160,8 @@ public class RelayManager : MonoBehaviour
             // Copy to clipboard
             GUIUtility.systemCopyBuffer = joinCode;
 
+            BadLogger.LogDebug($"Join code is {joinCode}");
+
             OnCreatedAllocationCodeRetrieved?.Invoke(joinCode);
         }
         catch (Exception e)
