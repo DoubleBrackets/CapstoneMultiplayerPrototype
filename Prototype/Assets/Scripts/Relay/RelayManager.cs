@@ -179,8 +179,11 @@ public class RelayManager : MonoBehaviour
             SetupTransport(_currentCreatedAllocation);
 
             // Host is both server and client
-            if (InstanceFinder.ServerManager.StartConnection())
+            BadLogger.LogDebug("Starting Fishnet Server");
+            bool startServer = InstanceFinder.ServerManager.StartConnection();
+            if (startServer)
             {
+                BadLogger.LogDebug("Starting Fishnet Host Client");
                 InstanceFinder.ClientManager.StartConnection();
             }
         }

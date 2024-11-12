@@ -38,6 +38,7 @@ public class BadLogger : MonoBehaviour
 
         if (!Application.isEditor)
         {
+            Debug.Log("Switching to Debug level logging in builds");
             LogLevel = Priority.Debug;
         }
     }
