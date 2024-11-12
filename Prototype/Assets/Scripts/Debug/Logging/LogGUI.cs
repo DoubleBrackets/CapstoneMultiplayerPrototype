@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 
+[DefaultExecutionOrder(-1)]
 public class LogGUI : MonoBehaviour
 {
     [SerializeField]
@@ -12,6 +13,7 @@ public class LogGUI : MonoBehaviour
     private void Awake()
     {
         _logText.text = string.Empty;
+        Application.logMessageReceived += HandleLog;
         BadLogger.LogDebug("Started up logging UI.");
         _debugObject.SetActive(Application.isEditor);
     }
@@ -24,12 +26,7 @@ public class LogGUI : MonoBehaviour
         }
     }
 
-    private void OnEnable()
-    {
-        Application.logMessageReceived += HandleLog;
-    }
-
-    private void OnDisable()
+    private void OnDestroy()
     {
         Application.logMessageReceived -= HandleLog;
     }
