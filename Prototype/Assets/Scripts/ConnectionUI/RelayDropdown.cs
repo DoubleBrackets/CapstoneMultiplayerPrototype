@@ -26,6 +26,8 @@ public class RelayDropdown : MonoBehaviour
 
     private void Awake()
     {
+        _regionDropdown.ClearOptions();
+        _regionDropdown.AddOptions(new List<string> { "Finding Regions..." });
         _regionDropdown.onValueChanged.AddListener(OnRegionDropdownValueChanged);
     }
 

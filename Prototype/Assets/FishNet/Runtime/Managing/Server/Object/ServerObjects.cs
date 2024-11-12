@@ -377,7 +377,7 @@ namespace FishNet.Managing.Server
             foreach (NetworkObject nob in nobs)
             {
                 if (nob.IsSceneObject && !nob.IsNested)
-                    nob.SetInitializedValues(parentNob: null);
+                    nob.SetInitializedValues(parentNob: null, force: false);
             }
         }
 
@@ -735,7 +735,6 @@ namespace FishNet.Managing.Server
 
 
             List<NetworkConnection> conns = RetrieveAuthenticatedConnections();
-            conns.Remove(conn);
             
             RebuildObservers(spawnedNobs, conns);
             CollectionCaches<NetworkObject>.Store(spawnedNobs);

@@ -7,7 +7,7 @@
       "dependencies": {
         "com.unity.transport": "1.3.1"
       },
-      "hash": "096c8d8214205d040c4869ae0a4d99ac4982d16b"
+      "hash": "b3f6022d1f267bb21dd4e25a201adeb22b837663"
     },
     "com.cysharp.unitask": {
       "version": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
