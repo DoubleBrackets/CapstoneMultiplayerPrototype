@@ -31,11 +31,13 @@ public class DisconnectButton : MonoBehaviour
     {
         if (state.ConnectionState == LocalConnectionState.Started)
         {
+            BadLogger.LogDebug("Showing end session button; server started");
             _disconnectButton.gameObject.SetActive(true);
             _disconnectText.text = "End Session";
         }
         else if (state.ConnectionState == LocalConnectionState.Stopped)
         {
+            BadLogger.LogDebug("Hiding end session button; server stopped");
             _disconnectButton.gameObject.SetActive(false);
         }
     }
@@ -49,11 +51,13 @@ public class DisconnectButton : MonoBehaviour
 
         if (state.ConnectionState == LocalConnectionState.Started)
         {
+            BadLogger.LogDebug("Showing disconnect button; client started");
             _disconnectButton.gameObject.SetActive(true);
             _disconnectText.text = "Disconnect";
         }
         else if (state.ConnectionState == LocalConnectionState.Stopping)
         {
+            BadLogger.LogDebug("Hiding disconnect button; client stopping");
             _disconnectButton.gameObject.SetActive(false);
         }
     }
