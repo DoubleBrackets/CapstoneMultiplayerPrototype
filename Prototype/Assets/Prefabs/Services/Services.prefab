@@ -222,6 +222,7 @@ GameObject:
   - component: {fileID: 7175331510587966068}
   - component: {fileID: 4257320819557874860}
   - component: {fileID: 6079719123529443401}
+  - component: {fileID: 537476162207314131}
   m_Layer: 0
   m_Name: LogGUI
   m_TagString: Untagged
@@ -319,6 +320,21 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &537476162207314131
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 509252535973466746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f73df1130e3bb547bd8ae3ba5409b21, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _text: {fileID: 7244099877612557836}
+  _container: {fileID: 4445819912054150093}
+  _scrollRect: {fileID: 6079719123529443401}
 --- !u!1 &555309769239578188
 GameObject:
   m_ObjectHideFlags: 0
@@ -1040,7 +1056,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34e4a322dca349547989b14021da4e23, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Transport: {fileID: 0}
+  Transport: {fileID: 5593384904923481784}
   _intermediateLayer: {fileID: 0}
   _latencySimulator:
     _enabled: 0
@@ -2425,7 +2441,6 @@ GameObject:
   - component: {fileID: 2369792458229206678}
   - component: {fileID: 8056765135930202664}
   - component: {fileID: 7244099877612557836}
-  - component: {fileID: 6286448120975704796}
   m_Layer: 0
   m_Name: LogText
   m_TagString: Untagged
@@ -2563,20 +2578,6 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!114 &6286448120975704796
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7029518013565226017}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6f73df1130e3bb547bd8ae3ba5409b21, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _text: {fileID: 7244099877612557836}
-  _container: {fileID: 4445819912054150093}
 --- !u!1 &7184690639646313449
 GameObject:
   m_ObjectHideFlags: 0
@@ -2852,7 +2853,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: -0.000026723957}
   m_SizeDelta: {x: 0, y: 209.74}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &7916807744694866139
@@ -2911,7 +2912,7 @@ GameObject:
   - component: {fileID: 3380452026481393148}
   - component: {fileID: 5789063681457157780}
   - component: {fileID: 7299400715623438341}
-  - component: {fileID: 23605822761328918}
+  - component: {fileID: 5593384904923481784}
   m_Layer: 0
   m_Name: UnityRelayManagers
   m_TagString: Untagged
@@ -2947,7 +2948,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _unityCloudManager: {fileID: 7299400715623438341}
-  _fishyUnityTransport: {fileID: 23605822761328918}
+  _fishyUnityTransport: {fileID: 5593384904923481784}
 --- !u!114 &7299400715623438341
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2960,7 +2961,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5af90f9200773a540a5587f7529096d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &23605822761328918
+--- !u!114 &5593384904923481784
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

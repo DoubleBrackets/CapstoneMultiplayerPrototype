@@ -1,16 +1,20 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
-///     Resizes text to fit TMP Text
+///     Handles displaying debug logs in-game
 /// </summary>
-public class TextFitter : MonoBehaviour
+public class InGameLogUI : MonoBehaviour
 {
     [SerializeField]
     private TMP_Text _text;
 
     [SerializeField]
     private RectTransform _container;
+
+    [SerializeField]
+    private ScrollRect _scrollRect;
 
     private string _lastTextContent;
 
@@ -25,6 +29,8 @@ public class TextFitter : MonoBehaviour
         {
             _lastTextContent = _text.text;
             FitText();
+            // Scroll to bottom
+            _scrollRect.normalizedPosition = new Vector2(0, 0);
         }
     }
 
