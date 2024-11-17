@@ -133,6 +133,12 @@ public class NetworkProtag : NetworkBehaviour
         Gizmos.DrawWireCube((Vector2)_bodyAnchor.position + _moveStats.GroundCheckOffset, _moveStats.GroundCheckSize);
     }
 
+    public override void OnStartClient()
+    {
+        Color c = ServerNetworkPlayerDataManager.Instance.GetPlayerData(Owner).UserColor;
+        GetComponentInChildren<SpriteRenderer>().color = c;
+    }
+
     public override void OnStartNetwork()
     {
         TimeManager.OnTick += TimeManager_OnTick;
@@ -150,18 +156,6 @@ public class NetworkProtag : NetworkBehaviour
         }
 
         gameObject.name += $"[Owner={OwnerId}]";
-
-        Color c = Color.red;
-        if (OwnerId == 0)
-        {
-            c = Color.green;
-        }
-        else if (OwnerId == 1)
-        {
-            c = Color.blue;
-        }
-
-        GetComponentInChildren<SpriteRenderer>().color = c;
     }
 
     public override void OnStopNetwork()
