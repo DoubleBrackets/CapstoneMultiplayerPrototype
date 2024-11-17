@@ -5,8 +5,6 @@ using UnityEngine;
 
 public class UsernameTextfield : MonoBehaviour
 {
-    public const string UsernamePlayerPrefsKey = "Username";
-
     [SerializeField]
     private TMP_InputField _inputField;
 
@@ -18,18 +16,12 @@ public class UsernameTextfield : MonoBehaviour
     private void Start()
     {
         _usernameStatusText.text = "";
-        string prefName = PlayerPrefs.GetString(UsernamePlayerPrefsKey, "");
+        string prefName = OfflinePlayerDataManager.Instance.OfflineLocalPlayerData.Username;
 
-        if (string.IsNullOrEmpty(prefName))
-        {
-            prefName = "Player" + Random.Range(1, 1000);
-        }
-        else
+        if (!string.IsNullOrEmpty(prefName))
         {
             _inputField.text = prefName;
         }
-
-        OfflinePlayerDataManager.Instance.SetLocalPlayerName(prefName);
 
         _inputField.onSubmit.AddListener(HandleUsernameSubmit);
         _inputField.onEndEdit.AddListener(HandleUsernameSubmit);
@@ -57,8 +49,6 @@ public class UsernameTextfield : MonoBehaviour
         }
 
         username = username.Trim();
-
-        PlayerPrefs.SetString(UsernamePlayerPrefsKey, username);
 
         OfflinePlayerDataManager.Instance.SetLocalPlayerName(username);
 
