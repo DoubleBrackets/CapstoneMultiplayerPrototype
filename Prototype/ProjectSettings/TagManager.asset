@@ -50,5 +50,8 @@ TagManager:
   - name: Actors
     uniqueID: 4006011995
     locked: 0
+  - name: WorldspaceUI
+    uniqueID: 1364355923
+    locked: 0
   m_RenderingLayers:
   - Default
