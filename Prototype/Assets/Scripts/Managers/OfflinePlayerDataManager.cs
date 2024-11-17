@@ -1,3 +1,6 @@
+#if UNITY_EDITOR
+using ParrelSync;
+#endif
 using UnityEngine;
 
 /// <summary>
@@ -11,9 +14,13 @@ public class OfflinePlayerDataManager : MonoBehaviour
         public Color UserColor;
     }
 
-    private const string UsernamePlayerPrefsKey = "Username";
-    private const string UserColorPlayerPrefsKey = "UserColor";
-
+    #if UNITY_EDITOR
+    private readonly string _prefsPostfix = ClonesManager.GetCurrentProject().name;
+    #else
+    private readonly string _prefsPostfix = "";
+    #endif
+    private string UsernamePlayerPrefsKey => "Username" + _prefsPostfix;
+    private string UserColorPlayerPrefsKey => "UserColor" + _prefsPostfix;
     public static OfflinePlayerDataManager Instance { get; private set; }
     public PublicPlayerData OfflineLocalPlayerData { get; set; }
 

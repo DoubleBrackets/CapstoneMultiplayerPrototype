@@ -23,11 +23,13 @@ public class NetworkProtag : NetworkBehaviour
     {
         public readonly float Horizontal;
         public readonly bool Jump;
+        public readonly BasicRigidbody2DState Rigidbody2DState;
 
-        public MovementData(float horizontal, bool jump)
+        public MovementData(float horizontal, bool jump, BasicRigidbody2DState state = default)
         {
             Horizontal = horizontal;
             Jump = jump;
+            Rigidbody2DState = state;
             _tick = 0;
         }
 
@@ -93,6 +95,9 @@ public class NetworkProtag : NetworkBehaviour
 
     [SerializeField]
     private bool _collideWithPlayers;
+
+    [SerializeField]
+    private bool _clientAuth;
 
     public event Action OnJump;
 
@@ -179,7 +184,8 @@ public class NetworkProtag : NetworkBehaviour
         Unfreeze();
         if (HasAuthority)
         {
-            var data = new MovementData(_horizontalInput, _jumpInput);
+            BasicRigidbody2DState state = _rb.GetBasicState();
+            var data = new MovementData(_horizontalInput, _jumpInput, state);
             Replicate(data);
         }
         else
@@ -246,11 +252,11 @@ public class NetworkProtag : NetworkBehaviour
                 }
             }
         }
-        else
+        /*else
         {
             _predictionRigidbody.AddForce(Vector2.up * _moveStats.Gravity);
             // desiredVel.y += _moveStats.Gravity * delta;
-        }
+        }*/
 
         _predictionRigidbody.AddForce(Vector3.right * (desiredVel.x - currentVel.x), ForceMode2D.Impulse);
         // _predictionRigidbody.Velocity(desiredVel);
@@ -270,6 +276,11 @@ public class NetworkProtag : NetworkBehaviour
         {
             _animator.SetFloat("Speed", Mathf.Abs(_rb.linearVelocity.x) * Mathf.Abs(horizontal));
             _animator.SetBool("Air", !isGrounded);
+        }
+
+        if (_clientAuth && IsServerStarted)
+        {
+            _rb.SetBasicState(data.Rigidbody2DState);
         }
     }
 
@@ -314,9 +325,13 @@ public class NetworkProtag : NetworkBehaviour
     [Reconcile]
     private void Reconcile(ReconcileData data, Channel channel = Channel.Unreliable)
     {
-        BadLogger.LogTrace($"Reconciling {name} tick {data.GetTick()}", BadLogger.Actor.Client);
         Unfreeze();
-        _rb.SetBasicState(data.Rigidbody2DState);
+
+        if (!IsOwner || !_clientAuth)
+        {
+            BadLogger.LogTrace($"Reconciling {name} tick {data.GetTick()}", BadLogger.Actor.Client);
+            _rb.SetBasicState(data.Rigidbody2DState);
+        }
         Debug.DrawLine(_rb.position, _rb.position + Vector2.up, Color.yellow, 2f);
     }
 

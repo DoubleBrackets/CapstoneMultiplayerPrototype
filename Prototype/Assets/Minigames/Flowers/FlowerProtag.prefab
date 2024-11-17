@@ -83,10 +83,30 @@ PrefabInstance:
       propertyPath: m_Name
       value: FlowerProtag
       objectReference: {fileID: 0}
+    - target: {fileID: 4681934831348619135, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
+      propertyPath: _componentIndexCache
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7703328290281989573, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
+      propertyPath: <PrefabId>k__BackingField
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7703328290281989573, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
+      propertyPath: NetworkBehaviours.Array.size
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 7703328290281989573, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
       propertyPath: <AssetPathHash>k__BackingField
       value: 8318823846919782913
       objectReference: {fileID: 0}
+    - target: {fileID: 7703328290281989573, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
+      propertyPath: 'NetworkBehaviours.Array.data[2]'
+      value: 
+      objectReference: {fileID: 8377095713245843765}
+    - target: {fileID: 7703328290281989573, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
+      propertyPath: 'NetworkBehaviours.Array.data[3]'
+      value: 
+      objectReference: {fileID: 6566504414699901999}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -120,9 +140,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 87e08433a410bd84ab2deb7a9899d4d8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 2
   _addedNetworkObject: {fileID: 8160173228532262549}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 8160173228532262549}
   _flowerPrefab:
   - {fileID: 8155671558642045609, guid: 0f1d50440d3a70049af33d9420fabf56, type: 3}
   - {fileID: 8155671558642045609, guid: 86df50303b4ca9b4e9bddc82d0949dfe, type: 3}
@@ -139,6 +159,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9a5cc69f40bc51442bb7f7e86693a48a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &6566504414699901999 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4681934831348619135, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
+  m_PrefabInstance: {fileID: 2006769340558918480}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4cb885aadff56ce42a422509a14ec9fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!114 &8160173228532262549 stripped

@@ -45,9 +45,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4cb885aadff56ce42a422509a14ec9fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 2
   _addedNetworkObject: {fileID: 7703328290281989573}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 7703328290281989573}
   _nameText: {fileID: 7453237878913785362}
 --- !u!1 &901009240292969721
 GameObject:
@@ -262,6 +262,7 @@ MonoBehaviour:
       serializedVersion: 2
       m_Bits: 64
   _collideWithPlayers: 0
+  _stopFreeze: 0
 --- !u!114 &7703328290281989573
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -281,6 +282,7 @@ MonoBehaviour:
   NetworkBehaviours:
   - {fileID: 3115465680783586738}
   - {fileID: 5445039347432122676}
+  - {fileID: 4681934831348619135}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -306,7 +308,7 @@ MonoBehaviour:
   _spectatorInterpolation: 3
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 8
+  <PrefabId>k__BackingField: 11
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 18221247586097704493
   <SceneId>k__BackingField: 0
@@ -345,7 +347,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDamping: 0
   m_AngularDamping: 0.05
-  m_GravityScale: 0
+  m_GravityScale: 3.5
   m_Material: {fileID: 6200000, guid: bfefb3d1c86c355489d56f22a7f62e91, type: 2}
   m_IncludeLayers:
     serializedVersion: 2

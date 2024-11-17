@@ -45,7 +45,7 @@ Material:
     - _ColorMask: 15
     - _CursorInnerRadius: 0.025
     - _CursorWidth: 0.01
-    - _Hue: 0.54106647
+    - _Hue: 0.6532967
     - _Stencil: 0
     - _StencilComp: 8
     - _StencilOp: 0
@@ -55,6 +55,6 @@ Material:
     - _UIMaskSoftnessY: 1
     m_Colors:
     - _ClipRect: {r: 0, g: 0, b: 0, a: 0}
-    - _SatValueCursor: {r: 0.5225054, g: 0.5840785, b: 0, a: 0}
+    - _SatValueCursor: {r: 1, g: 1, b: 0, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
