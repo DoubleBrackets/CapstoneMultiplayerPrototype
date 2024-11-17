@@ -56,14 +56,15 @@ jobs:
           # Small project, automatically bump version
           bump_each_commit: true
 
-      - name: Library Cache
-        uses: actions/cache@v3
-        with:
-          path: ${{env.PROJ_DIR}}/Library
-          key: Library-${{ env.PROJ_NAME }}-${{ matrix.targetPlatform }}-${{ hashFiles('${{env.PROJ_DIR}}/Assets/**', '${{env.PROJ_DIR}}/Packages/**', '${{env.PROJ_DIR}}/ProjectSettings/**') }}
-          restore-keys: |
-            Library-${{ env.PROJ_NAME }}-${{ matrix.targetPlatform }}-
-            Library-${{ env.PROJ_NAME }}-
+      # DISABLING CACHE FOR NOW - RUNNING INTO ISSUES WHERE OLD CACHE CAUSES BUGGY BUILD
+      # - name: Library Cache
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: ${{env.PROJ_DIR}}/Library
+      #     key: Library-${{ env.PROJ_NAME }}-${{ matrix.targetPlatform }}-${{ hashFiles('${{env.PROJ_DIR}}/Assets/**', '${{env.PROJ_DIR}}/Packages/**', '${{env.PROJ_DIR}}/ProjectSettings/**') }}
+      #     restore-keys: |
+      #       Library-${{ env.PROJ_NAME }}-${{ matrix.targetPlatform }}-
+      #       Library-${{ env.PROJ_NAME }}-
 
       - name: Build Unity Project
         uses: game-ci/unity-builder@v4
