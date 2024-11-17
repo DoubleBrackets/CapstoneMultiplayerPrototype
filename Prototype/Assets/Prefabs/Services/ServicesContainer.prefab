@@ -45,3 +45,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _singletonPrefab: {fileID: 5052432655788330589, guid: 739a117e361d5ba489f1be398bd13e15, type: 3}
+  _networkServicePrefab: {fileID: 9158321652622975452, guid: 7a624de135cefc34b979862b82f4cd05, type: 3}

@@ -91,6 +91,9 @@ public class NetworkProtag : NetworkBehaviour
     [SerializeField]
     private MoveStats _moveStats;
 
+    [SerializeField]
+    private bool _collideWithPlayers;
+
     public event Action OnJump;
 
     private float _horizontalInput;
@@ -108,6 +111,11 @@ public class NetworkProtag : NetworkBehaviour
         _predictionRigidbody = new PredictionRigidbody2D();
         _predictionRigidbody.Initialize(_rb);
         Debug.Log($"Initialized PredictionRigidbody for {name}");
+
+        if (!_collideWithPlayers)
+        {
+            Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("Protag"), LayerMask.NameToLayer("Protag"));
+        }
     }
 
     private void Update()

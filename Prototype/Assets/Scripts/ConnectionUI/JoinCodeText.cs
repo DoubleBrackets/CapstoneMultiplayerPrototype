@@ -14,7 +14,7 @@ public class JoinCodeText : MonoBehaviour
     private RelayManager _relayManager;
     private ServerManager _serverManager;
 
-    private void Start()
+    private void OnEnable()
     {
         _relayManager = UnityServiceFinder.RelayManager;
         _serverManager = InstanceFinder.ServerManager;
@@ -26,7 +26,7 @@ public class JoinCodeText : MonoBehaviour
         _joinCodeText.text = NoGameRunning;
     }
 
-    private void OnDestroy()
+    private void OnDisable()
     {
         _relayManager.OnCreatedAllocationCodeRetrieved -= OnCreatedAllocationCodeRetrieved;
         _serverManager.OnServerConnectionState -= OnServerConnectionState;
