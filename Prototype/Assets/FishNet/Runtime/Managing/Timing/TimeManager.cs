@@ -707,6 +707,7 @@ namespace FishNet.Managing.Timing
                     if (PhysicsMode == PhysicsMode.TimeManager)
                     {
                         OnPrePhysicsSimulation?.Invoke(tickDelta);
+                        // Debug.Log( "Physics.Simulate(tickDelta) " + tickDelta);
                         Physics.Simulate(tickDelta);
                         Physics2D.Simulate(tickDelta);
                         OnPostPhysicsSimulation?.Invoke(tickDelta);

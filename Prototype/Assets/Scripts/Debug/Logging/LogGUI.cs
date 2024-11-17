@@ -16,6 +16,8 @@ public class LogGUI : MonoBehaviour
 
     [SerializeField]
     private ScrollRect _scrollRect;
+    
+    private string _log = string.Empty;
 
     private void Awake()
     {
@@ -52,9 +54,14 @@ public class LogGUI : MonoBehaviour
 
     private void HandleLog(string logString, string stackTrace, LogType type)
     {
-        _logText.text += $"[{type}] {logString} \n";
-        FitText();
-        // Scroll to bottom
-        _scrollRect.normalizedPosition = new Vector2(0, 0);
+        _log += $"[{type}] {logString} \n";
+
+        if (_debugObject.activeSelf)
+        {
+            _logText.text = _log;
+            FitText();
+            // Scroll to bottom
+            _scrollRect.normalizedPosition = new Vector2(0, 0);
+        }
     }
 }

@@ -727,8 +727,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 8834152191015826152}
   m_HandleRect: {fileID: 542676127338406326}
   m_Direction: 0
-  m_Value: 0
-  m_Size: 0.99999994
+  m_Value: 1
+  m_Size: 0.9999999
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -853,8 +853,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2618396525264276584}
   m_HandleRect: {fileID: 5787901175592221706}
   m_Direction: 2
-  m_Value: 1
-  m_Size: 1
+  m_Value: 0
+  m_Size: 0.99966586
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -999,7 +999,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e08bb003fce297d4086cf8cba5aa459a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _dropExcessiveReplicates: 1
+  _dropExcessiveReplicates: 0
   _maximumServerReplicates: 15
   _createLocalStates: 1
   _stateInterpolation: 3
@@ -3141,7 +3141,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -0.000050852996}
+  m_AnchoredPosition: {x: 0, y: -0.000034188768}
   m_SizeDelta: {x: 0, y: 209.74}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &7916807744694866139
