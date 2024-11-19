@@ -1,16 +1,17 @@
+using System.Collections.Generic;
+using FishNet.Connection;
+using FishNet.Object;
 using UnityEngine;
 
-public class Gun : MonoBehaviour
+public class Gun : NetworkBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    // public override void OnStartNetwork()
+    // {
+    //     _networkProtag.OnPickup += OnPickup;
+    // }
+    
+    // public override void OnStopNetwork()
+    // {
+    //     _networkProtag.OnPickup -= OnPickup;
+    // }
 }

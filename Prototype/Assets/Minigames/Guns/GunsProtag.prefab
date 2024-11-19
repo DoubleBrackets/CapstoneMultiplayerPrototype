@@ -41,11 +41,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 817786416974150726, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.4610932
+      value: -1.2569995
       objectReference: {fileID: 0}
     - target: {fileID: 817786416974150726, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 4.4375467
+      value: 4.658265
       objectReference: {fileID: 0}
     - target: {fileID: 817786416974150726, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
       propertyPath: m_LocalPosition.z
@@ -91,16 +91,84 @@ PrefabInstance:
       propertyPath: <AssetPathHash>k__BackingField
       value: 4402253647384598092
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 7703328290281989573, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
+      propertyPath: 'NetworkBehaviours.Array.data[0]'
+      value: 
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 3115465680783586738, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 817786416974150726, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2103481905358323480}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3155652934974706484, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
+      insertIndex: 1
+      addedObject: {fileID: 7056718002834729117}
   m_SourcePrefab: {fileID: 100100000, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
+--- !u!95 &681125393336774680 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 923696894076353942, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
+  m_PrefabInstance: {fileID: 406017216578538894}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1079503711794459080 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 817786416974150726, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
   m_PrefabInstance: {fileID: 406017216578538894}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &3344299985218657978 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3155652934974706484, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
+  m_PrefabInstance: {fileID: 406017216578538894}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &7056718002834729117
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3344299985218657978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f186ccbd269824520916e1838347c92a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 8018042060405925963}
+  _networkObjectCache: {fileID: 0}
+  _rb: {fileID: 6756595459748877030}
+  _bodyAnchor: {fileID: 1079503711794459080}
+  _animator: {fileID: 681125393336774680}
+  _spriteRenderer: {fileID: 5624968312581895783}
+  _moveStats:
+    MoveSpeed: 6
+    MoveAccel: 45
+    JumpHeight: 2.1
+    Gravity: -35
+    GroundCheckOffset: {x: 0, y: -0.55}
+    GroundCheckSize: {x: 0.5, y: 0.05}
+    GroundLayer:
+      serializedVersion: 2
+      m_Bits: 64
+--- !u!212 &5624968312581895783 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 5453173470615501801, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
+  m_PrefabInstance: {fileID: 406017216578538894}
+  m_PrefabAsset: {fileID: 0}
+--- !u!50 &6756595459748877030 stripped
+Rigidbody2D:
+  m_CorrespondingSourceObject: {fileID: 6369859279696043880, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
+  m_PrefabInstance: {fileID: 406017216578538894}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &8018042060405925963 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7703328290281989573, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
+  m_PrefabInstance: {fileID: 406017216578538894}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3344299985218657978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26b716c41e9b56b4baafaf13a523ba2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

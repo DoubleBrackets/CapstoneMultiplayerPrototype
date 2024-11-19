@@ -149,6 +149,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92910a2ff913f4af3ac4280bc6924975, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 348080532}
+  _networkObjectCache: {fileID: 0}
 --- !u!114 &348080532
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -802,6 +805,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92910a2ff913f4af3ac4280bc6924975, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 1842538279}
+  _networkObjectCache: {fileID: 0}
 --- !u!1 &1882598281
 GameObject:
   m_ObjectHideFlags: 0
