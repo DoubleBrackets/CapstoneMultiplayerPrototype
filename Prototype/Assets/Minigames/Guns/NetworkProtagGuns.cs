@@ -9,6 +9,8 @@ using UnityEngine.InputSystem;
 public class NetworkProtagGuns : NetworkBehaviour, GunGamePlayerControls.IPlayerActions
 {
     GunGamePlayerControls _controls;
+    [SerializeField] private LayerMask _gunLayer;
+    [SerializeField] private Transform _gunHoldPoint;
 
     [Serializable]
     public struct MoveStats
@@ -138,7 +140,40 @@ public class NetworkProtagGuns : NetworkBehaviour, GunGamePlayerControls.IPlayer
     
     public void OnInteract(InputAction.CallbackContext obj)
     {
-        // Interact
+        if (obj.phase != InputActionPhase.Performed)
+        {
+            return;
+        }
+    
+        Debug.Log("Interacting");
+        Collider2D[] hits = Physics2D.OverlapBoxAll(_bodyAnchor.position, new Vector2(2,2), 0, _gunLayer);
+        if (hits.Length > 0)
+        {
+            RPC_PickUpGun(hits[0].gameObject);
+        }
+    }
+
+    [ServerRpc]
+    private void RPC_PickUpGun(GameObject gun)
+    {
+        if (gun == null || Vector2.Distance(_bodyAnchor.position, gun.transform.position) > 2)
+        {
+            Debug.Log("Gun is too far away or does not exist.");
+            return;
+        }
+
+        RPC_PickUpGunClient(gun);
+    }
+    
+    [ObserversRpc]
+    private void RPC_PickUpGunClient(GameObject gun)
+    {
+        // spawn the gun in the player's hand for all clients
+        ServerGun gunScript = gun.GetComponent<ServerGun>();
+        GameObject gunInstance = Instantiate(gunScript.clientGun, _gunHoldPoint.position, Quaternion.identity);
+        gunInstance.transform.parent = _gunHoldPoint;
+        
+        gun.SetActive(false);
     }
     
     public void OnDrop(InputAction.CallbackContext obj)

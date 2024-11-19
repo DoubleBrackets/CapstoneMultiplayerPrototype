@@ -176,7 +176,7 @@ public partial class @GunGamePlayerControls: IInputActionCollection2, IDisposabl
                 {
                     ""name"": """",
                     ""id"": ""f5127d7c-2323-4ff5-b527-fb25cc0f1548"",
-                    ""path"": ""<Keyboard>/e"",
+                    ""path"": ""<Keyboard>/f"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",

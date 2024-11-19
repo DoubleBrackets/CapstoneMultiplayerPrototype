@@ -25,11 +25,11 @@ Transform:
   m_GameObject: {fileID: 1652687795697534630}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.217, y: -0.081, z: 0}
+  m_LocalPosition: {x: 0.21700001, y: 0.41900015, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1079503711794459080}
+  m_Father: {fileID: 903568910715614003}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &406017216578538894
 PrefabInstance:
@@ -83,24 +83,40 @@ PrefabInstance:
       propertyPath: m_Name
       value: GunsProtag
       objectReference: {fileID: 0}
+    - target: {fileID: 6369859279696043880, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
+      propertyPath: m_ExcludeLayers.m_Bits
+      value: 256
+      objectReference: {fileID: 0}
     - target: {fileID: 7703328290281989573, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
       propertyPath: <SceneId>k__BackingField
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7703328290281989573, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
+      propertyPath: <PrefabId>k__BackingField
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7703328290281989573, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
       propertyPath: <AssetPathHash>k__BackingField
-      value: 4402253647384598092
+      value: 5765434215506148368
       objectReference: {fileID: 0}
     - target: {fileID: 7703328290281989573, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
       propertyPath: 'NetworkBehaviours.Array.data[0]'
       value: 
+      objectReference: {fileID: 7056718002834729117}
+    - target: {fileID: 7703328290281989573, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
+      propertyPath: SerializedTransformProperties.Position.x
+      value: -1.2569995
+      objectReference: {fileID: 0}
+    - target: {fileID: 7703328290281989573, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
+      propertyPath: SerializedTransformProperties.Position.y
+      value: 4.658265
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 3115465680783586738, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 817786416974150726, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
-      insertIndex: -1
+    - targetCorrespondingSourceObject: {fileID: 659893493397798589, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
+      insertIndex: 0
       addedObject: {fileID: 2103481905358323480}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 3155652934974706484, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
@@ -110,6 +126,11 @@ PrefabInstance:
 --- !u!95 &681125393336774680 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 923696894076353942, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
+  m_PrefabInstance: {fileID: 406017216578538894}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &903568910715614003 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 659893493397798589, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
   m_PrefabInstance: {fileID: 406017216578538894}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &1079503711794459080 stripped
@@ -134,9 +155,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f186ccbd269824520916e1838347c92a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 0
   _addedNetworkObject: {fileID: 8018042060405925963}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 8018042060405925963}
+  _gunLayer:
+    serializedVersion: 2
+    m_Bits: 256
+  _gunHoldPoint: {fileID: 2103481905358323480}
   _rb: {fileID: 6756595459748877030}
   _bodyAnchor: {fileID: 1079503711794459080}
   _animator: {fileID: 681125393336774680}
