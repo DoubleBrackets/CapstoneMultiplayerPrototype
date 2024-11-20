@@ -61,6 +61,7 @@ namespace Minigames.BallBounce
         [ObserversRpc(RunLocally = true)]
         private void ObserversRpc_UpdateHighScore(float newScore)
         {
+            BadLogger.LogInfo($"New high score: {newScore}", BadLogger.Actor.Client);
             _maxScore = newScore;
             _maxScoreText.text = "HighScore: " + $"{newScore:0.00}";
         }
