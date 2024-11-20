@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using DebugTools;
 using FishNet;
 using FishNet.Component.Prediction;
@@ -80,6 +81,8 @@ public class Ball : NetworkBehaviour
     [SerializeField]
     private float _bizmoDuration;
 
+    private readonly List<uint> _bumpTicks = new();
+
     //Forces are not applied in this example but you
     //could definitely still apply forces to the PredictionRigidbody
     //even with no controller, such as if you wanted to bump it
@@ -128,7 +131,7 @@ public class Ball : NetworkBehaviour
             _rb.linearVelocity = Random.insideUnitCircle * 20f;
             _rb.angularVelocity = Random.Range(-360f, 360f);
             _bumpState = new Rigidbody2DState(_rb);
-            ServerRpc_GiveOwnership(LocalConnection, 10f);
+            ServerRpc_DoBump(IsOwner ? 0 : TimeManager.Tick, 0.25f, Owner);
         }
     }
 
@@ -168,7 +171,7 @@ public class Ball : NetworkBehaviour
                     _bumpState.Velocity.y = 5f;
                 }
 
-                ServerRpc_GiveOwnership(protag.Owner, 0.5f);
+                ServerRpc_DoBump(IsOwner ? 0 : TimeManager.Tick, 0.25f, Owner);
             }
 
             _wasBumped = true;
@@ -188,8 +191,13 @@ public class Ball : NetworkBehaviour
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void ServerRpc_GiveOwnership(NetworkConnection conn, float duration)
+    private void ServerRpc_DoBump(uint tick, float duration, NetworkConnection conn = null)
     {
+        if (tick != 0)
+        {
+            _bumpTicks.Add(tick);
+        }
+
         GiveOwnership(conn);
         _loseOwnershipTime = duration;
         _timeSinceLastBump = 0f;
@@ -230,6 +238,12 @@ public class Ball : NetworkBehaviour
         if (HasAuthority)
         {
             var data = new ReplicateData(_bumpState.Velocity, _bumpState.AngularVelocity, _wasBumped);
+            bool injectedBumpTick = IsServerInitialized && _bumpTicks.Contains(TimeManager.Tick);
+            if (injectedBumpTick)
+            {
+                data.WasBumped = true;
+            }
+
             RunInputs(data);
         }
         else
@@ -254,20 +268,19 @@ public class Ball : NetworkBehaviour
     private void RunInputs(ReplicateData data, ReplicateState state = ReplicateState.Invalid,
         Channel channel = Channel.Unreliable)
     {
-        /*if (state.IsFuture() && !IsServerInitialized)
-        {
-            Freeze();
-            return;
-        }*/
+        bool doNotUseData = !IsServerInitialized && !IsOwner && !state.IsReplayed();
 
-        if (data.WasBumped)
+        if (!doNotUseData)
         {
-            _rb.linearVelocity = data.Vel;
-            _rb.angularVelocity = data.AngleVel;
-
-            if (IsServerInitialized && Owner != LocalConnection)
+            if (data.WasBumped)
             {
-                BadLogger.LogDebug($"Replicate Ball: {data.WasBumped} {state} {TimeManager.Tick}");
+                _rb.linearVelocity = data.Vel;
+                _rb.angularVelocity = data.AngleVel;
+
+                if (IsServerInitialized && Owner != LocalConnection)
+                {
+                    BadLogger.LogDebug($"Replicate Ball: {data.WasBumped} {state} {TimeManager.Tick}");
+                }
             }
         }
 
@@ -313,7 +326,6 @@ public class Ball : NetworkBehaviour
 
     private void Freeze()
     {
-        return;
         if (_frozen)
         {
             return;
@@ -344,6 +356,15 @@ public class Ball : NetworkBehaviour
         var rd = new ReconcileData(_rb.GetState());
         ReconcileState(rd);
 
+        for (var i = 0; i < _bumpTicks.Count; i++)
+        {
+            if (_bumpTicks[i] < TimeManager.Tick)
+            {
+                _bumpTicks.RemoveAt(i);
+                i--;
+            }
+        }
+
         Vector2 pos = rd.RbState.Position;
         Bizmos.Instance.AddBizmo(
             new LineBizmo(pos, pos + Vector2.left * LineLength, Color.blue),
@@ -358,12 +379,6 @@ public class Ball : NetworkBehaviour
     [Reconcile]
     private void ReconcileState(ReconcileData data, Channel channel = Channel.Unreliable)
     {
-        //Call reconcile on your PredictionRigidbody field passing in
-        //values from data.
-        if (HasAuthority)
-        {
-        }
-
         Unfreeze();
 
         BadLogger.LogTrace($"Reconcile Ball: {TimeManager.Tick}");

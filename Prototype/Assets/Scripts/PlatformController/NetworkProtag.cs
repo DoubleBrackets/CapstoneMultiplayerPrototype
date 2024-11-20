@@ -272,11 +272,8 @@ public class NetworkProtag : NetworkBehaviour
             _spriteRenderer.flipX = true;
         }
 
-        if (replicateState != ReplicateState.ReplayedFuture)
-        {
-            _animator.SetFloat("Speed", Mathf.Abs(_rb.linearVelocity.x) * Mathf.Abs(horizontal));
-            _animator.SetBool("Air", !isGrounded);
-        }
+        _animator.SetFloat("Speed", Mathf.Abs(_rb.linearVelocity.x) * Mathf.Abs(horizontal));
+        _animator.SetBool("Air", !isGrounded);
 
         if (_clientAuth && IsServerStarted)
         {
@@ -332,6 +329,7 @@ public class NetworkProtag : NetworkBehaviour
             BadLogger.LogTrace($"Reconciling {name} tick {data.GetTick()}", BadLogger.Actor.Client);
             _rb.SetBasicState(data.Rigidbody2DState);
         }
+
         Debug.DrawLine(_rb.position, _rb.position + Vector2.up, Color.yellow, 2f);
     }
 

@@ -62,7 +62,7 @@ Rigidbody2D:
     m_Bits: 0
   m_Interpolate: 0
   m_SleepingMode: 0
-  m_CollisionDetection: 1
+  m_CollisionDetection: 0
   m_Constraints: 0
 --- !u!114 &6785763816503814623
 MonoBehaviour:
@@ -131,7 +131,7 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 6785763816503814623}
   _networkObjectCache: {fileID: 6785763816503814623}
   _halo: {fileID: 6073020047115897234}
-  _bizmoDuration: 0.1
+  _bizmoDuration: 0.5
 --- !u!61 &3115035588042154030
 BoxCollider2D:
   m_ObjectHideFlags: 0

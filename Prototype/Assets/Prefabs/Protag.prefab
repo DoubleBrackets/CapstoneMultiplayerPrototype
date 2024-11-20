@@ -254,7 +254,7 @@ MonoBehaviour:
   _moveStats:
     MoveSpeed: 6
     MoveAccel: 45
-    JumpHeight: 2.1
+    JumpHeight: 2.2
     Gravity: -35
     GroundCheckOffset: {x: 0, y: -0.55}
     GroundCheckSize: {x: 0.5, y: 0.05}
@@ -308,7 +308,7 @@ MonoBehaviour:
   _spectatorInterpolation: 3
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 11
+  <PrefabId>k__BackingField: 12
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 18221247586097704493
   <SceneId>k__BackingField: 0
@@ -357,7 +357,7 @@ Rigidbody2D:
     m_Bits: 0
   m_Interpolate: 0
   m_SleepingMode: 1
-  m_CollisionDetection: 1
+  m_CollisionDetection: 0
   m_Constraints: 4
 --- !u!114 &8741297519735965543
 MonoBehaviour:

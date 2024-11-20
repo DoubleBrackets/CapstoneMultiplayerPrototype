@@ -48,13 +48,13 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3115465680783586738, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
-      propertyPath: _clientAuth
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 3155652934974706484, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
       propertyPath: m_Name
       value: BouncyBallProtag
+      objectReference: {fileID: 0}
+    - target: {fileID: 7703328290281989573, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
+      propertyPath: _graphicalObject
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 7703328290281989573, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
       propertyPath: <PrefabId>k__BackingField
