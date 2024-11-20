@@ -262,7 +262,7 @@ MonoBehaviour:
       serializedVersion: 2
       m_Bits: 64
   _collideWithPlayers: 0
-  _stopFreeze: 0
+  _clientAuth: 0
 --- !u!114 &7703328290281989573
 MonoBehaviour:
   m_ObjectHideFlags: 0

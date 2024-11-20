@@ -1,3 +1,4 @@
+using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,8 +17,8 @@ public class LogGUI : MonoBehaviour
 
     [SerializeField]
     private ScrollRect _scrollRect;
-    
-    private string _log = string.Empty;
+
+    private readonly StringBuilder _log = new();
 
     private void Awake()
     {
@@ -54,11 +55,12 @@ public class LogGUI : MonoBehaviour
 
     private void HandleLog(string logString, string stackTrace, LogType type)
     {
-        _log += $"[{type}] {logString} \n";
+        _log.Append($"[{type}] {logString} \n");
 
         if (_debugObject.activeSelf)
         {
-            _logText.text = _log;
+            _logText.text += _log.ToString();
+            _log.Clear();
             FitText();
             // Scroll to bottom
             _scrollRect.normalizedPosition = new Vector2(0, 0);

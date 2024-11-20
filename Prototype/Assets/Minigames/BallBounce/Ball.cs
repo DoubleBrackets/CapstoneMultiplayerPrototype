@@ -1,24 +1,29 @@
+using DebugTools;
 using FishNet;
 using FishNet.Component.Prediction;
+using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Prediction;
 using FishNet.Transporting;
 using GameKit.Dependencies.Utilities;
 using Minigames.BallBounce;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class Ball : NetworkBehaviour
 {
     //Replicate structure.
     public struct ReplicateData : IReplicateData
     {
-        public BasicRigidbody2DState Rigidbody2DState;
+        public Vector2 Vel;
+        public float AngleVel;
         public bool WasBumped;
 
-        public ReplicateData(BasicRigidbody2DState rigidbody2DState, bool wasBumped)
+        public ReplicateData(Vector2 vel, float angleVel, bool wasBumped)
         {
             WasBumped = wasBumped;
-            Rigidbody2DState = rigidbody2DState;
+            Vel = vel;
+            AngleVel = angleVel;
             _tick = 0;
         }
 
@@ -67,8 +72,13 @@ public class Ball : NetworkBehaviour
         }
     }
 
+    private const float LineLength = 0.25f;
+
     [SerializeField]
     private SpriteRenderer _halo;
+
+    [SerializeField]
+    private float _bizmoDuration;
 
     //Forces are not applied in this example but you
     //could definitely still apply forces to the PredictionRigidbody
@@ -77,9 +87,14 @@ public class Ball : NetworkBehaviour
     private PredictionRigidbody2D _predictionRigidbody;
     private Rigidbody2D _rb;
     private bool _wasBumped;
-    
+
     private Rigidbody2DState _rbState;
     private bool _frozen;
+
+    private Rigidbody2DState _bumpState;
+
+    private float _timeSinceLastBump;
+    private float _loseOwnershipTime;
 
     private void Awake()
     {
@@ -94,6 +109,26 @@ public class Ball : NetworkBehaviour
         {
             Color ownerColor = ServerNetworkPlayerDataManager.Instance.GetPlayerData(Owner).UserColor;
             _halo.color = ownerColor;
+        }
+        else
+        {
+            _halo.color = Color.white;
+        }
+
+        _timeSinceLastBump += Time.deltaTime;
+        if (IsServerStarted && _timeSinceLastBump > _loseOwnershipTime && Owner.IsValid)
+        {
+            BadLogger.LogDebug("Removing ownership due to inactivity", BadLogger.Actor.Server);
+            RemoveOwnership();
+        }
+
+        if (Input.GetKeyDown(KeyCode.Y))
+        {
+            _wasBumped = true;
+            _rb.linearVelocity = Random.insideUnitCircle * 20f;
+            _rb.angularVelocity = Random.Range(-360f, 360f);
+            _bumpState = new Rigidbody2DState(_rb);
+            ServerRpc_GiveOwnership(LocalConnection, 10f);
         }
     }
 
@@ -116,14 +151,48 @@ public class Ball : NetworkBehaviour
         var protag = other.gameObject.GetComponent<NetworkProtag>();
         if (protag)
         {
-            if (ServerManager.Started)
+            /*if (ServerManager.Started)
             {
                 BadLogger.LogDebug($"Bumped by protag, giving ownership to {protag.Owner.ClientId}",
                     BadLogger.Actor.Server);
                 GiveOwnership(protag.Owner);
+                _timeSinceLastBump = 0f;
+            }*/
+            if (protag.IsOwner)
+            {
+                BadLogger.LogDebug($"Bumped by protag, giving ownership to {protag.Owner.ClientId}",
+                    BadLogger.Actor.Client);
+                _bumpState = new Rigidbody2DState(_rb);
+                if (_bumpState.Velocity.y <= 5f)
+                {
+                    _bumpState.Velocity.y = 5f;
+                }
+
+                ServerRpc_GiveOwnership(protag.Owner, 0.5f);
             }
+
             _wasBumped = true;
         }
+    }
+
+    private void OnCollisionStay2D(Collision2D other)
+    {
+        var ground = other.gameObject.GetComponent<ScoreGround>();
+        if (ground)
+        {
+            if (InstanceFinder.ServerManager.Started)
+            {
+                BallBounceScoreManager.Instance.ResetScore();
+            }
+        }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void ServerRpc_GiveOwnership(NetworkConnection conn, float duration)
+    {
+        GiveOwnership(conn);
+        _loseOwnershipTime = duration;
+        _timeSinceLastBump = 0f;
     }
 
     //In this example we do not need to use OnTick, only OnPostTick.
@@ -143,7 +212,7 @@ public class Ball : NetworkBehaviour
         TimeManager.OnPostTick -= TimeManager_OnPostTick;
         PredictionManager.OnPrePhysicsTransformSync -= PredictionManager_OnPrePhysicsTransformSync;
     }
-    
+
     private void PredictionManager_OnPrePhysicsTransformSync(uint clienttick, uint servertick)
     {
         // Prevent strange collision behaviors during reconciliation when one body is not replicate replaying
@@ -155,11 +224,12 @@ public class Ball : NetworkBehaviour
 
     private void TimeManager_OnTick()
     {
+        BadLogger.LogTrace(TimeManager.Tick.ToString());
         Unfreeze();
 
         if (HasAuthority)
         {
-            var data = new ReplicateData(_rb.GetBasicState(), _wasBumped);
+            var data = new ReplicateData(_bumpState.Velocity, _bumpState.AngularVelocity, _wasBumped);
             RunInputs(data);
         }
         else
@@ -184,28 +254,66 @@ public class Ball : NetworkBehaviour
     private void RunInputs(ReplicateData data, ReplicateState state = ReplicateState.Invalid,
         Channel channel = Channel.Unreliable)
     {
-        if (state == ReplicateState.ReplayedFuture && !IsServerInitialized)
+        /*if (state.IsFuture() && !IsServerInitialized)
         {
             Freeze();
             return;
-        }
-        
+        }*/
+
         if (data.WasBumped)
         {
-            Vector2 lPos = _rb.position;
-            _rb.SetBasicState(data.Rigidbody2DState);
-            _rb.position = lPos;
-            if (_rb.linearVelocity.y <= 5f)
+            _rb.linearVelocity = data.Vel;
+            _rb.angularVelocity = data.AngleVel;
+
+            if (IsServerInitialized && Owner != LocalConnection)
             {
-                _rb.linearVelocityY = 5f;
+                BadLogger.LogDebug($"Replicate Ball: {data.WasBumped} {state} {TimeManager.Tick}");
             }
-            BadLogger.LogDebug($"Replicate Ball: {data.WasBumped} {state} {TimeManager.Tick}");
+        }
+
+        // Debug bizmos
+        Color c = Color.white;
+        Vector2 dir = Vector2.up;
+        var showVel = false;
+        switch (state)
+        {
+            case ReplicateState.Invalid:
+                c = Color.white;
+                break;
+            case ReplicateState.CurrentCreated:
+                c = Color.green;
+                dir = Vector2.one;
+                showVel = true;
+                break;
+            case ReplicateState.ReplayedCreated:
+                c = Color.cyan;
+                dir = Vector2.right;
+                break;
+            case ReplicateState.CurrentFuture:
+                c = Color.red;
+                dir = Vector2.up;
+                break;
+            case ReplicateState.ReplayedFuture:
+                dir = Vector2.right + Vector2.down;
+                break;
+        }
+
+        Vector2 pos = _rb.position;
+        Bizmos.Instance.AddBizmo(
+            new LineBizmo(pos, pos + dir * LineLength, c),
+            _bizmoDuration);
+
+        if (showVel)
+        {
+            Bizmos.Instance.AddGuiBizmo(
+                new TextBizmo(pos + dir * (LineLength * 3f), data.GetTick().ToString() + _rb.linearVelocity, c),
+                _bizmoDuration);
         }
     }
-    
-    
+
     private void Freeze()
     {
+        return;
         if (_frozen)
         {
             return;
@@ -235,6 +343,16 @@ public class Ball : NetworkBehaviour
     {
         var rd = new ReconcileData(_rb.GetState());
         ReconcileState(rd);
+
+        Vector2 pos = rd.RbState.Position;
+        Bizmos.Instance.AddBizmo(
+            new LineBizmo(pos, pos + Vector2.left * LineLength, Color.blue),
+            _bizmoDuration);
+
+        Bizmos.Instance.AddGuiBizmo(
+            new TextBizmo(pos + Vector2.left * (LineLength * 3f), TimeManager.Tick.ToString() + _rb.linearVelocity,
+                Color.blue),
+            _bizmoDuration);
     }
 
     [Reconcile]
@@ -245,10 +363,22 @@ public class Ball : NetworkBehaviour
         if (HasAuthority)
         {
         }
+
         Unfreeze();
 
-        BadLogger.LogDebug($"Reconcile Ball: {TimeManager.Tick}");
+        BadLogger.LogTrace($"Reconcile Ball: {TimeManager.Tick}");
 
         _rb.SetState(data.RbState);
+
+        Vector2 pos = data.RbState.Position;
+
+        Bizmos.Instance.AddBizmo(
+            new LineBizmo(pos, pos + -Vector2.one * LineLength, Color.magenta),
+            _bizmoDuration);
+
+        Bizmos.Instance.AddGuiBizmo(
+            new TextBizmo(pos + -Vector2.one * (LineLength * 3f), data.GetTick().ToString() + _rb.linearVelocity,
+                Color.magenta),
+            _bizmoDuration);
     }
 }

@@ -49,6 +49,8 @@ public class NetworkSceneDebug : MonoBehaviour
         if (clientManager.Started)
         {
             GUILayout.Label($"Local Client: {clientManager.Connection.ClientId}", _style);
+            GUILayout.Label($"Tick: {InstanceFinder.TimeManager.Tick}", _style);
         }
+        
     }
 }
