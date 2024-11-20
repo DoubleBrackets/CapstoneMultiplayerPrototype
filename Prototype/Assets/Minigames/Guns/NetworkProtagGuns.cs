@@ -2,16 +2,19 @@ using System;
 using FishNet.Component.Prediction;
 using FishNet.Object;
 using FishNet.Object.Prediction;
+using FishNet.Object.Synchronizing;
 using FishNet.Transporting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class NetworkProtagGuns : NetworkBehaviour, GunGamePlayerControls.IPlayerActions
+public class NetworkProtagGuns : NetworkBehaviour
 {
-    GunGamePlayerControls _controls;
-    [SerializeField] private LayerMask _gunLayer;
-    [SerializeField] private Transform _gunHoldPoint;
-
+    // controls
+    private InputSystem_Actions _controls;
+    private InputAction _moveAction;
+    private InputAction _jumpAction;
+    
+    
     [Serializable]
     public struct MoveStats
     {
@@ -112,79 +115,21 @@ public class NetworkProtagGuns : NetworkBehaviour, GunGamePlayerControls.IPlayer
         _predictionRigidbody = new PredictionRigidbody2D();
         _predictionRigidbody.Initialize(_rb);
         Debug.Log($"Initialized PredictionRigidbody for {name}");
+        
     }
     
     private void Update()
     {
         if (IsOwner)
         {
-            // _horizontalInput = Input.GetAxisRaw("Horizontal");
-            //_jumpInput = _jumpInput || Input.GetButtonDown("Jump");
+            _horizontalInput = _moveAction.ReadValue<Vector2>().x;
         }
     }
     
-    public void OnMove(InputAction.CallbackContext obj)
-    {
-        _horizontalInput = obj.ReadValue<float>();
-    }
 
     public void OnJump(InputAction.CallbackContext obj)
     {
         _jumpInput = true;
-    }
-    
-    public void OnShoot(InputAction.CallbackContext obj)
-    {
-        // Shoot
-    }
-    
-    public void OnInteract(InputAction.CallbackContext obj)
-    {
-        if (obj.phase != InputActionPhase.Performed)
-        {
-            return;
-        }
-    
-        Debug.Log("Interacting");
-        Collider2D[] hits = Physics2D.OverlapBoxAll(_bodyAnchor.position, new Vector2(2,2), 0, _gunLayer);
-        if (hits.Length > 0)
-        {
-            RPC_PickUpGun(hits[0].gameObject);
-        }
-    }
-
-    [ServerRpc]
-    private void RPC_PickUpGun(GameObject gun)
-    {
-        if (gun == null || Vector2.Distance(_bodyAnchor.position, gun.transform.position) > 2)
-        {
-            Debug.Log("Gun is too far away or does not exist.");
-            return;
-        }
-
-        RPC_PickUpGunClient(gun);
-    }
-    
-    [ObserversRpc]
-    private void RPC_PickUpGunClient(GameObject gun)
-    {
-        // spawn the gun in the player's hand for all clients
-        ServerGun gunScript = gun.GetComponent<ServerGun>();
-        GameObject gunInstance = Instantiate(gunScript.clientGun, _gunHoldPoint.position, Quaternion.identity);
-        gunInstance.transform.parent = _gunHoldPoint;
-        
-        gun.SetActive(false);
-    }
-    
-    public void OnDrop(InputAction.CallbackContext obj)
-    {
-        // Drop
-    }
-    
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireCube((Vector2)_bodyAnchor.position + _moveStats.GroundCheckOffset, _moveStats.GroundCheckSize);
     }
 
     public override void OnStartNetwork()
@@ -219,11 +164,7 @@ public class NetworkProtagGuns : NetworkBehaviour, GunGamePlayerControls.IPlayer
         
         if (Owner.IsLocalClient)
         {
-            _controls = new GunGamePlayerControls();
-            _controls.Player.SetCallbacks(this);
-            _controls.Player.Enable();
-            // debug
-            Debug.Log("Controls enabled");
+            InitializeControls();
         }
 
     }
@@ -233,6 +174,11 @@ public class NetworkProtagGuns : NetworkBehaviour, GunGamePlayerControls.IPlayer
         TimeManager.OnTick -= TimeManager_OnTick;
         TimeManager.OnPostTick -= TimeManager_PostTick;
         PredictionManager.OnPrePhysicsTransformSync -= PredictionManager_OnPrePhysicsTransformSync;
+        
+        if (Owner.IsLocalClient)
+        {
+            DeInitializeControls();
+        }
     }
 
     private void PredictionManager_OnPrePhysicsTransformSync(uint clienttick, uint servertick)
@@ -312,7 +258,7 @@ public class NetworkProtagGuns : NetworkBehaviour, GunGamePlayerControls.IPlayer
 
                 if (replicateState == ReplicateState.CurrentCreated)
                 {
-                    OnJump(default);
+                    _jumpInput = true;
                 }
             }
         }
@@ -397,4 +343,26 @@ public class NetworkProtagGuns : NetworkBehaviour, GunGamePlayerControls.IPlayer
 
         return hit != null;
     }
+    
+    
+    private void InitializeControls()
+    {
+        _controls = new InputSystem_Actions();
+        
+        _moveAction = _controls.Player.Move;
+        _moveAction.Enable();
+        
+        _jumpAction = _controls.Player.Jump;
+        _jumpAction.Enable();
+        _jumpAction.performed += OnJump;
+    }
+    
+    private void DeInitializeControls()
+    {
+        _moveAction.Disable();
+        
+        _jumpAction.Disable();
+        _jumpAction.performed -= OnJump;
+    }
+    
 }
