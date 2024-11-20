@@ -14,18 +14,20 @@ public class FlowerSpawner : NetworkBehaviour
     [SerializeField]
     private Transform _spawnSource;
 
-    public override void OnStartNetwork()
+    public override void OnStartClient()
     {
-        _networkProtag.OnJump += OnJump;
+        Debug.Log("flower spawner start");
+        _networkProtag.OnJumpPerformed += OnFlowerJump;
     }
 
-    public override void OnStopNetwork()
+    public override void OnStopClient()
     {
-        _networkProtag.OnJump -= OnJump;
+        _networkProtag.OnJumpPerformed -= OnFlowerJump;
     }
 
-    private void OnJump()
+    private void OnFlowerJump()
     {
+        Debug.Log("flower jump");
         if (!IsOwner)
         {
             return;

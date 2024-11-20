@@ -4,9 +4,15 @@ using FishNet.Object;
 using FishNet.Object.Prediction;
 using FishNet.Transporting;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class NetworkProtag : NetworkBehaviour
 {
+    // controls
+    private InputSystem_Actions _controls;
+    private InputAction _moveAction;
+    private InputAction _jumpAction;
+
     [Serializable]
     public struct MoveStats
     {
@@ -99,7 +105,7 @@ public class NetworkProtag : NetworkBehaviour
     [SerializeField]
     private bool _clientAuth;
 
-    public event Action OnJump;
+    public event Action OnJumpPerformed;
 
     private float _horizontalInput;
     private bool _jumpInput;
@@ -127,9 +133,13 @@ public class NetworkProtag : NetworkBehaviour
     {
         if (IsOwner)
         {
-            _horizontalInput = Input.GetAxisRaw("Horizontal");
-            _jumpInput = _jumpInput || Input.GetButtonDown("Jump");
+            _horizontalInput = _moveAction.ReadValue<Vector2>().x;
         }
+    }
+    
+    public void OnJump(InputAction.CallbackContext obj)
+    {
+        _jumpInput = true;
     }
 
     private void OnDrawGizmos()
@@ -142,6 +152,15 @@ public class NetworkProtag : NetworkBehaviour
     {
         Color c = ServerNetworkPlayerDataManager.Instance.GetPlayerData(Owner).UserColor;
         GetComponentInChildren<SpriteRenderer>().color = c;
+        
+        InitializeControls();
+    }
+    
+    public override void OnStopClient()
+    {
+        base.OnStopClient();
+        
+        DeInitializeControls();
     }
 
     public override void OnStartNetwork()
@@ -248,7 +267,7 @@ public class NetworkProtag : NetworkBehaviour
 
                 if (replicateState == ReplicateState.CurrentCreated)
                 {
-                    OnJump?.Invoke();
+                    OnJumpPerformed?.Invoke();
                 }
             }
         }
@@ -341,5 +360,25 @@ public class NetworkProtag : NetworkBehaviour
         Collider2D hit = Physics2D.OverlapBox(checkPos, _moveStats.GroundCheckSize, 0, _moveStats.GroundLayer);
 
         return hit != null;
+    }
+    
+    private void InitializeControls()
+    {
+        _controls = new InputSystem_Actions();
+        
+        _moveAction = _controls.Player.Move;
+        _moveAction.Enable();
+        
+        _jumpAction = _controls.Player.Jump;
+        _jumpAction.Enable();
+        _jumpAction.performed += OnJump;
+    }
+    
+    private void DeInitializeControls()
+    {
+        _moveAction.Disable();
+        
+        _jumpAction.Disable();
+        _jumpAction.performed -= OnJump;
     }
 }

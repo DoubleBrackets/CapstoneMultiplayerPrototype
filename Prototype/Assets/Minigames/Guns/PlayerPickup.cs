@@ -21,7 +21,6 @@ public class PlayerPickup : NetworkBehaviour
     {
         if (_objectInHand != null)
         {
-            Debug.Log("dropping obj: " + _objectInHand.name);
             RPC_DropObject(_objectInHand);
             return;
         }
@@ -29,7 +28,6 @@ public class PlayerPickup : NetworkBehaviour
         Collider2D[] hits = Physics2D.OverlapBoxAll(_bodyAnchor.position, new Vector2(2,2), 0, _pickupLayer);
         if (hits.Length > 0)
         {
-            Debug.Log("picking up obj: " + hits[0].gameObject.name);
             RPC_PickUpObject(hits[0].gameObject, _holdPosition.position, _holdPosition.rotation);
         }
     }
@@ -59,9 +57,6 @@ public class PlayerPickup : NetworkBehaviour
         if (obj.GetComponent<Rigidbody2D>() != null)
             obj.GetComponent<Rigidbody2D>().simulated = false;
         
-        if (obj.GetComponent<Collider2D>() != null)
-            obj.GetComponent<Collider2D>().enabled = false;
-        
         _objectInHand = obj;
     }
     
@@ -75,13 +70,10 @@ public class PlayerPickup : NetworkBehaviour
     [ObserversRpc]
     private void RPC_DropObjectClient(GameObject obj)
     {
-        obj.transform.parent = null;
-        
+        obj.GetComponent<NetworkObject>().UnsetParent();
+
         if (obj.GetComponent<Rigidbody2D>() != null)
             obj.GetComponent<Rigidbody2D>().simulated = true;
-        
-        if (obj.GetComponent<Collider2D>() != null)
-            obj.GetComponent<Collider2D>().enabled = true;
             
         _objectInHand = null;
     }

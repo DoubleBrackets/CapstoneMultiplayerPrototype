@@ -17,5 +17,5 @@ MonoBehaviour:
   - Assets/Scenes/Minigames/Flowers.unity
   - Assets/Scenes/Minigames/Guns.unity
   - Assets/Scenes/Minigames/BallBounce.unity
-  _startScene: Assets/Scenes/Minigames/Guns.unity
+  _startScene: Assets/Scenes/WaitingRoom.unity
   _mainMenuScene: Assets/Scenes/MainMenu.unity
