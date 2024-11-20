@@ -50,7 +50,7 @@ public class NetworkSceneDebug : MonoBehaviour
         {
             GUILayout.Label($"Local Client: {clientManager.Connection.ClientId}", _style);
             GUILayout.Label($"Tick: {InstanceFinder.TimeManager.Tick}", _style);
+            GUILayout.Label($"LocalTick: {InstanceFinder.TimeManager.LocalTick}", _style);
         }
-        
     }
 }

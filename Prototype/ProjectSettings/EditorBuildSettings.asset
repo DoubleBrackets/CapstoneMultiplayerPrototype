@@ -17,6 +17,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Minigames/BallBounce.unity
     guid: ba44412d6b96c4a45add878052697075
+  - enabled: 1
+    path: Assets/Scenes/Minigames/DebugScene.unity
+    guid: 1b16d443a40c5f04a993cbf3cf572805
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0
