@@ -1,6 +1,7 @@
 using FishNet.Connection;
 using FishNet.Object;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class ProtagSpawner : NetworkBehaviour
 {
@@ -12,11 +13,24 @@ public class ProtagSpawner : NetworkBehaviour
 
     private NetworkObject _protag;
 
-    private void Update()
+    [SerializeField]
+    private InputAction _spawnAction;
+
+    private void OnEnable()
     {
-        if (IsClientStarted)
+        _spawnAction.Enable();
+    }
+    
+    private void OnDisable()
+    {
+        _spawnAction.Disable();
+    }
+    
+    private void Start()
+    {
+        _spawnAction.performed += ctx =>
         {
-            if (Input.GetKeyDown(KeyCode.E))
+            if (IsClientStarted)
             {
                 if (_protag == null)
                 {
@@ -28,8 +42,27 @@ public class ProtagSpawner : NetworkBehaviour
                     _protag = null;
                 }
             }
-        }
+        };
     }
+    
+    // private void Update()
+    // {
+    //     if (IsClientStarted)
+    //     {
+    //         if (Input.GetKeyDown(KeyCode.E))
+    //         {
+    //             if (_protag == null)
+    //             {
+    //                 SpawnPlayer(_spawnPos.position);
+    //             }
+    //             else
+    //             {
+    //                 DespawnPlayer(_protag);
+    //                 _protag = null;
+    //             }
+    //         }
+    //     }
+    // }
 
     [ServerRpc(RequireOwnership = false)]
     private void SpawnPlayer(Vector3 pos, NetworkConnection connection = null)
