@@ -850,6 +850,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
+  _initializedValusSet: 0
   NetworkObserver: {fileID: 0}
   _enablePrediction: 0
   _predictionType: 0
@@ -889,6 +890,23 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 0}
   _networkPrefab: {fileID: 7703328290281989573, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
   _spawnPos: {fileID: 1882598282}
+  _spawnAction:
+    m_Name: Spawn
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: e7c02b94-afd7-4c2f-8365-99a890a60ef5
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: dd625ea0-98df-4c0a-8846-11dfc14312a6
+      m_Path: <Keyboard>/p
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Spawn
+      m_Flags: 0
+    m_Flags: 0
 --- !u!1 &1932782486
 GameObject:
   m_ObjectHideFlags: 0

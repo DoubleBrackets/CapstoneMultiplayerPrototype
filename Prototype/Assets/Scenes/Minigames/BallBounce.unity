@@ -340,6 +340,23 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 0}
   _networkPrefab: {fileID: 621446681855721440, guid: cad0b141317fe6c4a997df639e41c021, type: 3}
   _spawnPos: {fileID: 182935129}
+  _spawnAction:
+    m_Name: Spawn
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 902c1e9c-cf2e-41ea-8dac-5695c77814fe
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 3e126e95-3fa0-4528-bdc0-cdcc5ba33077
+      m_Path: <Keyboard>/p
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Spawn
+      m_Flags: 0
+    m_Flags: 0
 --- !u!4 &182935129
 Transform:
   m_ObjectHideFlags: 0
