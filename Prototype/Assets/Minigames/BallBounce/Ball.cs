@@ -9,7 +9,6 @@ using FishNet.Transporting;
 using GameKit.Dependencies.Utilities;
 using Minigames.BallBounce;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 public class Ball : NetworkBehaviour
 {
@@ -81,6 +80,9 @@ public class Ball : NetworkBehaviour
     [SerializeField]
     private float _bizmoDuration;
 
+    [SerializeField]
+    private float _verticalBumpVel;
+
     private readonly List<uint> _bumpTicks = new();
 
     //Forces are not applied in this example but you
@@ -124,15 +126,6 @@ public class Ball : NetworkBehaviour
             BadLogger.LogDebug("Removing ownership due to inactivity", BadLogger.Actor.Server);
             RemoveOwnership();
         }
-
-        if (Input.GetKeyDown(KeyCode.Y))
-        {
-            _wasBumped = true;
-            _rb.linearVelocity = Random.insideUnitCircle * 20f;
-            _rb.angularVelocity = Random.Range(-360f, 360f);
-            _bumpState = new Rigidbody2DState(_rb);
-            ServerRpc_DoBump(IsOwner ? 0 : TimeManager.Tick, 0.25f, Owner);
-        }
     }
 
     private void OnDestroy()
@@ -152,29 +145,30 @@ public class Ball : NetworkBehaviour
         }
 
         var protag = other.gameObject.GetComponent<NetworkProtag>();
-        if (protag)
+        if (protag && !IsBehaviourReconciling)
         {
-            /*if (ServerManager.Started)
+            _bumpState = new Rigidbody2DState(_rb);
+            if (_bumpState.Velocity.y <= _verticalBumpVel)
             {
-                BadLogger.LogDebug($"Bumped by protag, giving ownership to {protag.Owner.ClientId}",
-                    BadLogger.Actor.Server);
-                GiveOwnership(protag.Owner);
-                _timeSinceLastBump = 0f;
-            }*/
+                _bumpState.Velocity.y = _verticalBumpVel;
+            }
+
+            if (!IsServerStarted)
+            {
+                InjectPredictedBump();
+                _rb.SetState(_bumpState);
+            }
+            else
+            {
+                _wasBumped = true;
+            }
+
             if (protag.IsOwner)
             {
                 BadLogger.LogDebug($"Bumped by protag, giving ownership to {protag.Owner.ClientId}",
                     BadLogger.Actor.Client);
-                _bumpState = new Rigidbody2DState(_rb);
-                if (_bumpState.Velocity.y <= 5f)
-                {
-                    _bumpState.Velocity.y = 5f;
-                }
-
-                ServerRpc_DoBump(IsOwner ? 0 : TimeManager.Tick, 0.25f, Owner);
+                // ServerRpc_ChangeOwners(0.25f, Owner);
             }
-
-            _wasBumped = true;
         }
     }
 
@@ -191,16 +185,16 @@ public class Ball : NetworkBehaviour
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void ServerRpc_DoBump(uint tick, float duration, NetworkConnection conn = null)
+    private void ServerRpc_ChangeOwners(float duration, NetworkConnection conn = null)
     {
-        if (tick != 0)
-        {
-            _bumpTicks.Add(tick);
-        }
-
         GiveOwnership(conn);
         _loseOwnershipTime = duration;
         _timeSinceLastBump = 0f;
+    }
+
+    private void InjectPredictedBump()
+    {
+        _bumpTicks.Add(TimeManager.Tick);
     }
 
     //In this example we do not need to use OnTick, only OnPostTick.
@@ -232,17 +226,11 @@ public class Ball : NetworkBehaviour
 
     private void TimeManager_OnTick()
     {
-        BadLogger.LogTrace(TimeManager.Tick.ToString());
         Unfreeze();
 
         if (HasAuthority)
         {
             var data = new ReplicateData(_bumpState.Velocity, _bumpState.AngularVelocity, _wasBumped);
-            bool injectedBumpTick = IsServerInitialized && _bumpTicks.Contains(TimeManager.Tick);
-            if (injectedBumpTick)
-            {
-                data.WasBumped = true;
-            }
 
             RunInputs(data);
         }
@@ -268,19 +256,33 @@ public class Ball : NetworkBehaviour
     private void RunInputs(ReplicateData data, ReplicateState state = ReplicateState.Invalid,
         Channel channel = Channel.Unreliable)
     {
-        bool doNotUseData = !IsServerInitialized && !IsOwner && !state.IsReplayed();
-
-        if (!doNotUseData)
+        if (!IsServerInitialized)
         {
-            if (data.WasBumped)
-            {
-                _rb.linearVelocity = data.Vel;
-                _rb.angularVelocity = data.AngleVel;
+            BadLogger.LogTrace($"Data {data.GetTick()} " +
+                               $"{state} " +
+                               $"Reconcile {PredictionManager.GetReconcileStateTick(false)} " +
+                               $"Reconcile Client {PredictionManager.GetReconcileStateTick(true)} " +
+                               $"Local {TimeManager.LocalTick} " +
+                               $"Server {TimeManager.Tick}");
+        }
 
-                if (IsServerInitialized && Owner != LocalConnection)
-                {
-                    BadLogger.LogDebug($"Replicate Ball: {data.WasBumped} {state} {TimeManager.Tick}");
-                }
+        bool injectedBumpTick = _bumpTicks.Contains(PredictionManager.GetReconcileStateTick(false));
+        if (injectedBumpTick)
+        {
+            BadLogger.LogDebug("Injected Bump!");
+            data.WasBumped = true;
+            data.AngleVel = _bumpState.AngularVelocity;
+            data.Vel = _bumpState.Velocity;
+        }
+
+        if (data.WasBumped)
+        {
+            _rb.linearVelocity = data.Vel;
+            _rb.angularVelocity = data.AngleVel;
+
+            if (IsServerInitialized && Owner != LocalConnection)
+            {
+                BadLogger.LogDebug($"Replicate Ball: {data.WasBumped} {state} {TimeManager.Tick}");
             }
         }
 
@@ -356,15 +358,6 @@ public class Ball : NetworkBehaviour
         var rd = new ReconcileData(_rb.GetState());
         ReconcileState(rd);
 
-        for (var i = 0; i < _bumpTicks.Count; i++)
-        {
-            if (_bumpTicks[i] < TimeManager.Tick)
-            {
-                _bumpTicks.RemoveAt(i);
-                i--;
-            }
-        }
-
         Vector2 pos = rd.RbState.Position;
         Bizmos.Instance.AddBizmo(
             new LineBizmo(pos, pos + Vector2.left * LineLength, Color.blue),
@@ -381,7 +374,21 @@ public class Ball : NetworkBehaviour
     {
         Unfreeze();
 
-        BadLogger.LogTrace($"Reconcile Ball: {TimeManager.Tick}");
+        for (var i = 0; i < _bumpTicks.Count; i++)
+        {
+            if (_bumpTicks[i] < PredictionManager.GetReconcileStateTick(false))
+            {
+                _bumpTicks.RemoveAt(i);
+                i--;
+            }
+        }
+
+        BadLogger.LogTrace("Reconcile Ball: " +
+                           $"Data {data.GetTick()} " +
+                           $"Reconcile {PredictionManager.GetReconcileStateTick(false)} " +
+                           $"Reconcile Client {PredictionManager.GetReconcileStateTick(true)} " +
+                           $"Tick {TimeManager.Tick} " +
+                           $"Local Tick {TimeManager.LocalTick}");
 
         _rb.SetState(data.RbState);
 
