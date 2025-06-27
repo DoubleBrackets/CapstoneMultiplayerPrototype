@@ -4,7 +4,6 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using FishNet;
 using FishNet.Transporting.UTP;
-using Unity.Networking.Transport.Relay;
 using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
@@ -46,7 +45,7 @@ public class RelayManager : MonoBehaviour
     private UnityServiceManager _unityCloudManager;
 
     [SerializeField]
-    private FishyUnityTransport _fishyUnityTransport;
+    private UnityTransport _fishyUnityTransport;
 
     public static List<RelayManager> Instances { get; } = new();
 
@@ -275,13 +274,13 @@ public class RelayManager : MonoBehaviour
     private void SetupTransport(Allocation allocation)
     {
         ConfigureTransportType(out string connectionType);
-        _fishyUnityTransport.SetRelayServerData(new RelayServerData(allocation, connectionType));
+        _fishyUnityTransport.SetRelayServerData(allocation.ToRelayServerData(connectionType));
     }
 
     private void SetupTransport(JoinAllocation joinAllocation)
     {
         ConfigureTransportType(out string connectionType);
-        _fishyUnityTransport.SetRelayServerData(new RelayServerData(joinAllocation, connectionType));
+        _fishyUnityTransport.SetRelayServerData(joinAllocation.ToRelayServerData(connectionType));
     }
 
     private void ConfigureTransportType(out string connectionType)

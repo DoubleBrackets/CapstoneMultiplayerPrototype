@@ -290,7 +290,7 @@ public class Ball : NetworkBehaviour
         Color c = Color.white;
         Vector2 dir = Vector2.up;
         var showVel = false;
-        switch (state)
+        /*switch (state)
         {
             case ReplicateState.Invalid:
                 c = Color.white;
@@ -323,7 +323,7 @@ public class Ball : NetworkBehaviour
             Bizmos.Instance.AddGuiBizmo(
                 new TextBizmo(pos + dir * (LineLength * 3f), data.GetTick().ToString() + _rb.linearVelocity, c),
                 _bizmoDuration);
-        }
+        }*/
     }
 
     private void Freeze()

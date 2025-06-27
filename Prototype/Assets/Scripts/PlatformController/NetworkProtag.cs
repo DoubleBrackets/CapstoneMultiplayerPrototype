@@ -210,7 +210,7 @@ public class NetworkProtag : NetworkBehaviour
         var delta = (float)TimeManager.TickDelta;
 
         float horizontal = data.Horizontal;
-        if (replicateState == ReplicateState.ReplayedFuture && !IsServerInitialized)
+        if (replicateState.IsFuture() && !IsServerInitialized)
         {
             Freeze();
             return;
@@ -218,15 +218,19 @@ public class NetworkProtag : NetworkBehaviour
 
         // If we're missing a packet, we'll just use the last horizontal input
         // This is to smooth packet loss out on observers, since player movement is generally continuous
-        if (replicateState == ReplicateState.CurrentFuture)
+        if (replicateState.IsTickedNonCreated())
         {
             horizontal = _lastHorizontal;
             Debug.DrawLine(_rb.position, _rb.position + Vector2.up, Color.red, 2f);
         }
-        else if (replicateState == ReplicateState.CurrentCreated)
+        else if (replicateState.IsTickedCreated())
         {
             _lastHorizontal = (int)horizontal;
             Debug.DrawLine(_rb.position, _rb.position + Vector2.up, Color.green, 2f);
+        }
+        else
+        {
+            Debug.Log("Huh? Replicate state is neither TickedNonCreated nor TickedCreated.");
         }
 
         Vector2 currentVel = _rb.linearVelocity;
@@ -246,7 +250,7 @@ public class NetworkProtag : NetworkBehaviour
                 _predictionRigidbody.AddForce(Vector2.up * jumpVel, ForceMode2D.Impulse);
                 // desiredVel.y = jumpVel;
 
-                if (replicateState == ReplicateState.CurrentCreated)
+                if (replicateState.IsTickedCreated())
                 {
                     OnJump?.Invoke();
                 }
