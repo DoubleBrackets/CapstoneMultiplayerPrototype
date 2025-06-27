@@ -1,4 +1,4 @@
-﻿#if !FISHNET_STABLE_MODE
+﻿#if !FISHNET_STABLE_SYNCTYPES
 using FishNet.CodeGenerating;
 using FishNet.Documenting;
 using FishNet.Managing;
@@ -6,7 +6,6 @@ using FishNet.Object.Helping;
 using FishNet.Object.Synchronizing.Internal;
 using FishNet.Serializing;
 using FishNet.Serializing.Helping;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
@@ -168,7 +167,12 @@ namespace FishNet.Object.Synchronizing
         public void SetInitialValues(T value)
         {
             _initialValue = value;
-            UpdateValues(value);
+            /* Only update current if a value has not been set already.
+             * A value normally would not be set unless a SyncVar came through
+             * as the object was enabling, such as if it started in a disabled state
+             * and was later enabled. */
+            if (!_valueSetAfterInitialized)
+                UpdateValues(value);
 
             if (base.IsInitialized)
                 _valueSetAfterInitialized = true;
@@ -326,7 +330,7 @@ namespace FishNet.Object.Synchronizing
         {
             if (!base.IsInitialized)
                 return;
-            if (!base.CanNetworkSetValues(true))
+            if (!base.CanNetworkSetValues(log: true))
                 return;
 
             //Also set that values have changed since the user is forcing a sync.
@@ -418,7 +422,7 @@ namespace FishNet.Object.Synchronizing
             //     if (!_valueSetAfterInitialized)
             //         return;
             // }
-            
+
             if (!_valueSetAfterInitialized)
                 return;
 
@@ -460,7 +464,7 @@ namespace FishNet.Object.Synchronizing
              * asServer is true.
              * Is not network initialized.
              * asServer is false, and server is not started. */
-            if ((asServer && !base.NetworkManager.IsClientStarted) || (!asServer && base.NetworkBehaviour.IsDeinitializing))
+            if (base.CanReset(asServer))
             {
                 _value = _initialValue;
                 _valueSetAfterInitialized = false;

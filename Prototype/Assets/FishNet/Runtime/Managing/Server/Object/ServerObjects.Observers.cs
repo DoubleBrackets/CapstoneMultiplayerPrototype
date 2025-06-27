@@ -199,13 +199,25 @@ namespace FishNet.Managing.Server
              * their nested. Order nested in segments
              * of each root then insert after the root.
              * This must be performed after all roots are ordered. */
+
+            //This holds the results of all values.
             List<NetworkObject> sortedRootAndNestedCache = CollectionCaches<NetworkObject>.RetrieveList();
+
+            //Cache for sorting nested.
             List<NetworkObject> sortedNestedCache = CollectionCaches<NetworkObject>.RetrieveList();
+
             foreach (NetworkObject item in sortedRootCache)
             {
-                List<NetworkObject> nested = item.RetrieveNestedNetworkObjects(recursive: true);
+                /* Remove recursive and only check Initialized and Runtime. Once iterated 
+                 * check each added entry again using Initialized and Recursive. */
+                List<NetworkObject> nested = item.GetNetworkObjects(GetNetworkObjectOption.AllNestedRecursive);
                 foreach (NetworkObject nestedItem in nested)
-                    sortedNestedCache.AddOrdered(nestedItem);
+                {
+                    if (sortedNestedCache.Contains(nestedItem))
+                        Debug.LogError("Already contains " + nestedItem.name);
+                    else
+                        sortedNestedCache.AddOrdered(nestedItem);
+                }
 
                 CollectionCaches<NetworkObject>.Store(nested);
 
@@ -356,7 +368,7 @@ namespace FishNet.Managing.Server
                 if (_writer.Length > 0)
                 {
                     NetworkManager.TransportManager.SendToClient((byte)Channel.Reliable, _writer.GetArraySegment(), nc);
-                    _writer.Reset();
+                    _writer.Clear();
 
                     foreach (NetworkObject n in nobCache)
                         n.OnSpawnServer(nc);
@@ -373,17 +385,24 @@ namespace FishNet.Managing.Server
         {
             if (ApplicationState.IsQuitting())
                 return;
-            _writer.Reset();
+            _writer.Clear();
 
             conn.UpdateHashGridPositions(!timedOnly);
             //If observer state changed then write changes.
             ObserverStateChange osc = nob.RebuildObservers(conn, timedOnly);
             if (osc == ObserverStateChange.Added)
+            {
                 WriteSpawn(nob, _writer, conn);
+            }
             else if (osc == ObserverStateChange.Removed)
+            {
+                nob.InvokeOnServerDespawn(conn);
                 WriteDespawn(nob, nob.GetDefaultDespawnType(), _writer);
+            }
             else
+            {
                 return;
+            }
 
             NetworkManager.TransportManager.SendToClient((byte)Channel.Reliable, _writer.GetArraySegment(), conn);
 
@@ -392,6 +411,8 @@ namespace FishNet.Managing.Server
              * and onspawnserver. */
             if (osc == ObserverStateChange.Added)
                 nob.OnSpawnServer(conn);
+
+            _writer.Clear();
 
             /* If there is change then also rebuild recursive networkObjects. */
             foreach (NetworkBehaviour item in nob.RuntimeChildNetworkBehaviours)
@@ -414,16 +435,12 @@ namespace FishNet.Managing.Server
             ObserverStateChange osc = nob.RebuildObservers(conn, timedOnly);
             if (osc == ObserverStateChange.Added)
             {
-                /* Only write spawn if not predicted spawned, or if
-                 * conn is not predicted spawner. There is no need to send spawn
-                 * to predicted spawner given they spawned the object locally. */
-                NetworkConnection predictedSpawner = nob.PredictedSpawner;
-                if (!predictedSpawner.IsActive || predictedSpawner != conn)
-                    WriteSpawn(nob, _writer, conn);
+                WriteSpawn(nob, _writer, conn);
                 addedNobs.Add(nob);
             }
             else if (osc == ObserverStateChange.Removed)
             {
+                nob.InvokeOnServerDespawn(conn);
                 WriteDespawn(nob, nob.GetDefaultDespawnType(), _writer);
             }
             else

@@ -3,6 +3,7 @@ using LiteNetLib;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace FishNet.Transporting.Tugboat
 {
@@ -10,7 +11,7 @@ namespace FishNet.Transporting.Tugboat
     public abstract class CommonSocket
     {
 
-        #region Public.
+        #region Internal.
         /// <summary>
         /// Current ConnectionState.
         /// </summary>
@@ -40,16 +41,30 @@ namespace FishNet.Transporting.Tugboat
                 Transport.HandleClientConnectionState(new(connectionState, Transport.Index));
         }
         #endregion
+        
+        #region Internal.
+        /// <summary>
+        /// NetManager for this socket.
+        /// </summary>
+        internal NetManager NetManager;
+        #endregion
 
         #region Protected.
+        /// <summary>
+        /// Changes to the sockets local connection state.
+        /// </summary>
+        protected ConcurrentQueue<LocalConnectionState> LocalConnectionStates = new();
         /// <summary>
         /// Transport controlling this socket.
         /// </summary>
         protected Transport Transport;
+        #endregion
+        
+        #region Private.
         /// <summary>
-        /// NetManager for this socket.
+        /// Locks the NetManager to stop it.
         /// </summary>
-        protected NetManager NetManager;
+        private readonly object _stopLock = new();
         #endregion
 
         /// <summary>
@@ -137,6 +152,46 @@ namespace FishNet.Transporting.Tugboat
             nm?.PollEvents();
         }
 
+        /// <summary>
+        /// Stops the socket and updates local connection state.
+        /// </summary>
+        protected void StopSocket()
+        {
+            if (NetManager == null)
+                return;
+
+            bool threaded;
+            if (Transport is Tugboat tb)
+                threaded = tb.StopSocketsOnThread;
+            else
+                threaded = false;
+
+            //If using a thread.
+            if (threaded)
+            {
+                Task.Run(() =>
+                {
+                    lock (_stopLock)
+                    {
+                        NetManager?.Stop();
+                        NetManager = null;
+                    }
+
+                    //If not stopped yet also enqueue stop.
+                    if (GetConnectionState() != LocalConnectionState.Stopped)
+                        LocalConnectionStates.Enqueue(LocalConnectionState.Stopped);
+                });
+            }
+            //Not using a thread.
+            else
+            {
+                NetManager?.Stop();
+                NetManager = null;
+                //If not stopped yet also enqueue stop.
+                if (GetConnectionState() != LocalConnectionState.Stopped)
+                    LocalConnectionStates.Enqueue(LocalConnectionState.Stopped);
+            }
+        }
 
         /// <summary>
         /// Returns the port from the socket if active, otherwise returns null.

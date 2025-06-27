@@ -164,7 +164,7 @@ namespace FishNet.CodeGenerating.Helping
             List_TypeRef = base.ImportReference(tmpType);
             tmpType = typeof(RingBuffer<>);
             RingBuffer_TypeRef = base.ImportReference(tmpType);
-            
+
             SR.MethodInfo lstMi;
             lstMi = tmpType.GetMethod("Add");
             List_Add_MethodRef = base.ImportReference(lstMi);
@@ -485,8 +485,7 @@ namespace FishNet.CodeGenerating.Helping
             TypeReference typeTr = base.ImportReference(typeof(List<>));
             return typeTr.MakeGenericInstanceType(new TypeReference[] { dataTr });
         }
-        
-        
+
         /// <summary>
         /// Outputs generic Dictionary for keyTr and valueTr.
         /// </summary>
@@ -522,6 +521,29 @@ namespace FishNet.CodeGenerating.Helping
             TypeReference typeTr = base.ImportReference(typeof(BasicQueue<>));
             return typeTr.MakeGenericInstanceType(new TypeReference[] { dataTr });
         }
+        
+        
+        /// <summary>
+        /// Copies one method to another while transferring diagnostic paths.
+        /// </summary>
+        public void CopyIntoMethod(MethodDefinition originalMethodDef, MethodDefinition targetMethodDef)
+        {
+            TypeDefinition typeDef = originalMethodDef.DeclaringType;
+
+
+            (targetMethodDef.Body, originalMethodDef.Body) = (originalMethodDef.Body, targetMethodDef.Body);
+            //Move over all the debugging information
+            foreach (SequencePoint sequencePoint in originalMethodDef.DebugInformation.SequencePoints)
+                targetMethodDef.DebugInformation.SequencePoints.Add(sequencePoint);
+            originalMethodDef.DebugInformation.SequencePoints.Clear();
+
+            foreach (CustomDebugInformation customInfo in originalMethodDef.CustomDebugInformations)
+                targetMethodDef.CustomDebugInformations.Add(customInfo);
+            originalMethodDef.CustomDebugInformations.Clear();
+            //Swap debuginformation scope.
+            (originalMethodDef.DebugInformation.Scope, targetMethodDef.DebugInformation.Scope) = (targetMethodDef.DebugInformation.Scope, originalMethodDef.DebugInformation.Scope);
+        }
+
 
         /// <summary>
         /// Copies one method to another while transferring diagnostic paths.
@@ -531,22 +553,13 @@ namespace FishNet.CodeGenerating.Helping
             TypeDefinition typeDef = originalMd.DeclaringType;
 
             MethodDefinition md = typeDef.GetOrCreateMethodDefinition(base.Session, toMethodName, originalMd, true, out bool created);
+
             alreadyCreated = !created;
             if (alreadyCreated)
-                return md;
+                md.Body.Instructions.Clear();
 
-            (md.Body, originalMd.Body) = (originalMd.Body, md.Body);
-            //Move over all the debugging information
-            foreach (SequencePoint sequencePoint in originalMd.DebugInformation.SequencePoints)
-                md.DebugInformation.SequencePoints.Add(sequencePoint);
-            originalMd.DebugInformation.SequencePoints.Clear();
-
-            foreach (CustomDebugInformation customInfo in originalMd.CustomDebugInformations)
-                md.CustomDebugInformations.Add(customInfo);
-            originalMd.CustomDebugInformations.Clear();
-            //Swap debuginformation scope.
-            (originalMd.DebugInformation.Scope, md.DebugInformation.Scope) = (md.DebugInformation.Scope, originalMd.DebugInformation.Scope);
-
+            CopyIntoMethod(originalMd, md);
+            
             return md;
         }
 
@@ -1175,7 +1188,58 @@ namespace FishNet.CodeGenerating.Helping
                 void CreateClassOrStructComparer()
                 {
                     //Class or struct.
-                    Instruction exitMethodInst = processor.Create(OpCodes.Ldc_I4_0);
+                    Instruction falseLdcInst = processor.Create(OpCodes.Ldc_I4_0);
+
+                    //Non-value type null check.
+                    if (!dataTr.IsValueType)
+                    {
+                        GeneralHelper gh = base.GetClass<GeneralHelper>();
+
+                        Instruction checkNullAndNotNullInst = Instruction.Create(OpCodes.Nop);
+
+                        VariableDefinition isNullV0 = gh.CreateVariable(comparerMd, typeof(bool));
+                        VariableDefinition isNullV1 = gh.CreateVariable(comparerMd, typeof(bool));
+                        
+                        //isNull0 = (value0 == null);
+                        processor.Emit(OpCodes.Ldarg, v0Pd);
+                        processor.Emit(OpCodes.Ldnull);
+                        processor.Emit(OpCodes.Ceq);
+                        processor.Emit(OpCodes.Stloc, isNullV0);
+                        //isNull1 = (value1 == null);
+                        processor.Emit(OpCodes.Ldarg, v1Pd);
+                        processor.Emit(OpCodes.Ldnull);
+                        processor.Emit(OpCodes.Ceq);
+                        processor.Emit(OpCodes.Stloc, isNullV1);
+
+                        //If (isNull0 && isNull1) return true;
+                        processor.Emit(OpCodes.Ldloc, isNullV0);
+                        processor.Emit(OpCodes.Ldloc, isNullV1);
+                        processor.Emit(OpCodes.And);
+                        processor.Emit(OpCodes.Brfalse, checkNullAndNotNullInst);
+                        processor.Emit(OpCodes.Ldc_I4_1);
+                        processor.Emit(OpCodes.Ret);
+                        //Skip past ret here.
+                        processor.Append(checkNullAndNotNullInst);
+
+                        //bool isNullOpposing = (isNull0 != isNull1);
+                        VariableDefinition isNullOpposingVd = gh.CreateVariable(comparerMd, typeof(bool));
+                        processor.Emit(OpCodes.Ldloc, isNullV0);
+                        processor.Emit(OpCodes.Ldloc, isNullV1);
+                        processor.Emit(OpCodes.Ceq);
+                        processor.Emit(OpCodes.Ldc_I4_0);
+                        processor.Emit(OpCodes.Ceq);
+                        processor.Emit(OpCodes.Stloc, isNullOpposingVd);
+                        
+                                                
+                        Instruction checkPropertiesInst = Instruction.Create(OpCodes.Nop);
+                        //if (isNullOpposing) return false;
+                        processor.Emit(OpCodes.Ldloc, isNullOpposingVd);
+                        processor.Emit(OpCodes.Brfalse, checkPropertiesInst);
+                        processor.Emit(OpCodes.Ldc_I4_0);
+                        processor.Emit(OpCodes.Ret);
+                        //Skip past ret here.
+                        processor.Append(checkPropertiesInst);
+                    }
 
                     //Fields.
                     foreach (FieldDefinition fieldDef in dataTr.FindAllSerializableFields(base.Session, null, WriterProcessor.EXCLUDED_ASSEMBLY_PREFIXES))
@@ -1190,7 +1254,7 @@ namespace FishNet.CodeGenerating.Helping
                         processor.Emit(OpCodes.Ldfld, fr);
                         FinishTypeReferenceCompare(fieldDef.FieldType);
                     }
-
+                    
                     //Properties.
                     foreach (PropertyDefinition propertyDef in dataTr.FindAllSerializableProperties(base.Session, null, WriterProcessor.EXCLUDED_ASSEMBLY_PREFIXES))
                     {
@@ -1204,14 +1268,14 @@ namespace FishNet.CodeGenerating.Helping
                         processor.Emit(OpCodes.Call, getMr);
                         FinishTypeReferenceCompare(propertyDef.PropertyType);
                     }
-
+                    
                     //Return true;
                     processor.Emit(OpCodes.Ldc_I4_1);
                     processor.Emit(OpCodes.Ret);
-                    processor.Append(exitMethodInst);
+                    processor.Append(falseLdcInst);
                     processor.Emit(OpCodes.Ret);
 
-
+                    
                     void FinishTypeReferenceCompare(TypeReference tr)
                     {
                         /* If a class or struct see if it already has a comparer
@@ -1227,7 +1291,7 @@ namespace FishNet.CodeGenerating.Helping
                             {
                                 MethodDefinition cMd = CreateEqualityComparer(tr);
                                 processor.Emit(OpCodes.Call, cMd);
-                                processor.Emit(OpCodes.Brfalse, exitMethodInst);
+                                processor.Emit(OpCodes.Brfalse, falseLdcInst);
                             }
                             //Call existing.
                             else
@@ -1242,14 +1306,14 @@ namespace FishNet.CodeGenerating.Helping
                                 {
                                     MethodReference mr = base.ImportReference(cMd);
                                     processor.Emit(OpCodes.Call, mr);
-                                    processor.Emit(OpCodes.Brfalse, exitMethodInst);
+                                    processor.Emit(OpCodes.Brfalse, falseLdcInst);
                                 }
                             }
                         }
                         //Value types do not need to check custom comparers.
                         else
                         {
-                            processor.Emit(OpCodes.Bne_Un, exitMethodInst);
+                            processor.Emit(OpCodes.Bne_Un, falseLdcInst);
                         }
                     }
                 }
