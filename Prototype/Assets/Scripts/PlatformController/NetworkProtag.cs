@@ -4,7 +4,6 @@ using FishNet.Object;
 using FishNet.Object.Prediction;
 using FishNet.Transporting;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 namespace PlatformController
 {
@@ -185,7 +184,7 @@ namespace PlatformController
         {
             if (IsController)
             {
-                var data = new MovementData(_horizontalInput, _jumpInput, Random.value);
+                var data = new MovementData(_horizontalInput, _jumpInput, 1);
                 Replicate(data);
             }
             else
@@ -310,7 +309,7 @@ namespace PlatformController
         [Reconcile]
         private void Reconcile(ReconcileData data, Channel channel = Channel.Unreliable)
         {
-            BadLogger.LogDebug(
+            BadLogger.LogTrace(
                 $"Reconciled tick {data.GetTick()} {name}");
             _predictionRigidbody.Reconcile(data.Rigidbody2DState);
             ReplicateVisuals((int)data.HorizontalInput, true);

@@ -4,7 +4,6 @@ using FishNet.Object;
 using FishNet.Object.Prediction;
 using FishNet.Transporting;
 using GameKit.Dependencies.Utilities;
-using PlatformController;
 using UnityEngine;
 
 namespace Minigames.BallBounce
@@ -13,8 +12,11 @@ namespace Minigames.BallBounce
     {
         public struct ReplicateData : IReplicateData
         {
-            public ReplicateData(bool wasBumped)
+            public int Salt;
+
+            public ReplicateData(int salt)
             {
+                Salt = salt;
                 _tick = 0;
             }
 
@@ -108,7 +110,7 @@ namespace Minigames.BallBounce
             ObjectCaches<PredictionRigidbody2D>.StoreAndDefault(ref _predictionRigidbody);
         }
 
-        private void OnCollisionEnter2D(Collision2D other)
+        public void HandleCollisionStay2D(Collision2D other)
         {
             var ground = other.gameObject.GetComponent<ScoreGround>();
             if (ground)
@@ -118,36 +120,9 @@ namespace Minigames.BallBounce
                     BallBounceScoreManager.Instance.ResetScore();
                 }
             }
-
-            var protag = other.gameObject.GetComponent<NetworkProtag>();
-            /*if (protag && !IsBehaviourReconciling)
-            {
-                _bumpState = new Rigidbody2DState(_rb);
-                if (_bumpState.Velocity.y <= _verticalBumpVel)
-                {
-                    _bumpState.Velocity.y = _verticalBumpVel;
-                }
-
-                if (!IsServerStarted)
-                {
-                    InjectPredictedBump();
-                    _rb.SetState(_bumpState);
-                }
-                else
-                {
-                    _wasBumped = true;
-                }
-
-                if (protag.IsOwner)
-                {
-                    BadLogger.LogDebug($"Bumped by protag, giving ownership to {protag.Owner.ClientId}",
-                        BadLogger.Actor.Client);
-                    // ServerRpc_ChangeOwners(0.25f, Owner);
-                }
-            }*/
         }
 
-        private void OnCollisionStay2D(Collision2D other)
+        public void HandleCollisionEnter2D(Collision2D other)
         {
             var ground = other.gameObject.GetComponent<ScoreGround>();
             if (ground)
@@ -157,6 +132,17 @@ namespace Minigames.BallBounce
                     BallBounceScoreManager.Instance.ResetScore();
                 }
             }
+
+            /*var protag = other.gameObject.GetComponent<NetworkProtag>();
+            if (protag)
+            {
+                if (protag.IsOwner)
+                {
+                    BadLogger.LogInfo($"Bumped by protag, giving ownership to {protag.Owner.ClientId}",
+                        BadLogger.Actor.Client);
+                    ServerRpc_ChangeOwners(10f, protag.Owner);
+                }
+            }*/
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -187,7 +173,7 @@ namespace Minigames.BallBounce
         {
             if (IsController)
             {
-                var data = new ReplicateData(false);
+                var data = new ReplicateData(1);
                 RunInputs(data);
             }
             else
@@ -210,8 +196,9 @@ namespace Minigames.BallBounce
         private void RunInputs(ReplicateData data, ReplicateState state = ReplicateState.Invalid,
             Channel channel = Channel.Unreliable)
         {
-            BadLogger.LogTrace(
-                $"Replicating {state.ContainsTicked()} {state.ContainsReplayed()} {state.ContainsCreated()} tick {data.GetTick()} {name}");
+            /*BadLogger.LogTrace(
+                $"Replicating {state.ContainsTicked()} {state.ContainsReplayed()} " +
+                $"{state.ContainsCreated()} tick {data.GetTick()} {name}");*/
         }
 
         public override void CreateReconcile()
@@ -223,8 +210,8 @@ namespace Minigames.BallBounce
         [Reconcile]
         private void ReconcileState(ReconcileData data, Channel channel = Channel.Unreliable)
         {
-            BadLogger.LogTrace(
-                $"Reconciled tick {data.GetTick()} {name}");
+            /*BadLogger.LogTrace(
+                $"Reconciled tick {data.GetTick()} {name}");*/
             _predictionRigidbody.Reconcile(data.predictionRb);
         }
     }

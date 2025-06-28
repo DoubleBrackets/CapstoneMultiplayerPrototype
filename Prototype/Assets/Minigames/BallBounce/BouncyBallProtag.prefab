@@ -52,10 +52,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: BouncyBallProtag
       objectReference: {fileID: 0}
-    - target: {fileID: 6369859279696043880, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
-      propertyPath: m_Mass
-      value: 100
-      objectReference: {fileID: 0}
     - target: {fileID: 7703328290281989573, guid: 0d59c02a3f8a4364baba9fca6660eb10, type: 3}
       propertyPath: WasActiveDuringEdit
       value: 0
