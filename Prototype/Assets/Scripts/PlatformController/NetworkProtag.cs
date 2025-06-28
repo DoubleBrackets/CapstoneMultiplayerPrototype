@@ -200,18 +200,18 @@ namespace PlatformController
         [Replicate]
         private void Replicate(
             MovementData data,
-            ReplicateState replicateState = ReplicateState.Invalid,
+            ReplicateState state = ReplicateState.Invalid,
             Channel channel = Channel.Unreliable)
         {
             BadLogger.LogTrace(
-                $"Replicating {replicateState.ContainsTicked()} {replicateState.ContainsReplayed()} {replicateState.ContainsCreated()} {data.HorizontalInput} {data.Jump} tick {data.GetTick()} {name}");
+                $"Replicating {state.ContainsTicked()} {state.ContainsReplayed()} {state.ContainsCreated()} {data.HorizontalInput} {data.Jump} tick {data.GetTick()} {name}");
             var delta = (float)TimeManager.TickDelta;
 
             float horizontal = data.HorizontalInput;
 
             bool canPause = !IsOwner && !IsServerStarted;
 
-            if (replicateState.IsFuture())
+            if (state.IsFuture())
             {
                 // Pause for future ticks to prevent snapping from predicting on non-owning clients
                 if (canPause)
@@ -242,7 +242,7 @@ namespace PlatformController
                         float jumpVel = Mathf.Sqrt(2 * -_moveStats.Gravity * _moveStats.JumpHeight);
                         _predictionRigidbody.AddForce(Vector2.up * jumpVel * _rb.mass, ForceMode2D.Impulse);
 
-                        if (replicateState.IsTickedCreated())
+                        if (state.IsTickedCreated())
                         {
                             OnJump?.Invoke();
                         }
@@ -257,7 +257,7 @@ namespace PlatformController
 
                 _predictionRigidbody.Simulate();
 
-                if (replicateState.ContainsCreated())
+                if (state.ContainsCreated())
                 {
                     ReplicateVisuals((int)horizontal, isGrounded);
                 }

@@ -96,7 +96,7 @@ MonoBehaviour:
   _defaultDespawnType: 0
   NetworkObserver: {fileID: 0}
   _enablePrediction: 1
-  _predictionType: 0
+  _predictionType: 2
   _graphicalObject: {fileID: 0}
   _detachGraphicalObject: 1
   _enableStateForwarding: 1
@@ -134,7 +134,6 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 6785763816503814623}
   _halo: {fileID: 6073020047115897234}
   _bizmoDuration: 0.5
-  _verticalBumpVel: 10
 --- !u!61 &3115035588042154030
 BoxCollider2D:
   m_ObjectHideFlags: 0
