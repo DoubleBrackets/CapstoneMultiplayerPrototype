@@ -4,6 +4,7 @@ using FishNet.Object;
 using FishNet.Object.Prediction;
 using FishNet.Transporting;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace PlatformController
 {
@@ -28,11 +29,13 @@ namespace PlatformController
         {
             public float HorizontalInput;
             public bool Jump;
+            public float Salty;
 
-            public MovementData(float horizontalInput, bool jump)
+            public MovementData(float horizontalInput, bool jump, float salty)
             {
                 HorizontalInput = horizontalInput;
                 Jump = jump;
+                Salty = salty;
                 _tick = 0;
             }
 
@@ -182,7 +185,7 @@ namespace PlatformController
         {
             if (IsController)
             {
-                var data = new MovementData(_horizontalInput, _jumpInput);
+                var data = new MovementData(_horizontalInput, _jumpInput, Random.value);
                 Replicate(data);
             }
             else
@@ -211,7 +214,7 @@ namespace PlatformController
 
             bool canPause = !IsOwner && !IsServerStarted;
 
-            if (state.IsFuture())
+            /*if (state.IsFuture())
             {
                 // Pause for future ticks to prevent snapping from predicting on non-owning clients
                 if (canPause)
@@ -219,16 +222,30 @@ namespace PlatformController
                     NetworkObject.RigidbodyPauser.Pause();
                 }
             }
-            else
+            else*/
             {
                 // Unpause for created ticks
-                if (canPause)
+                /*if (canPause)
                 {
                     NetworkObject.RigidbodyPauser.Unpause();
-                    _horizontalInput = horizontal;
-                }
+                }*/
 
-                Debug.DrawLine(_rb.position, _rb.position + Vector2.up * 0.1f, Color.green, 2f);
+                if (state.ContainsCreated())
+                {
+                    // Cache the horizontal input in case we have non-created ticks
+                    if (IsServerStarted || !IsOwner)
+                    {
+                        _horizontalInput = horizontal;
+                    }
+
+                    Debug.DrawLine(_rb.position, _rb.position + Vector2.up * 0.1f, Color.green, 2f);
+                }
+                else
+                {
+                    // Use the cached input (predicting)
+                    horizontal = _horizontalInput;
+                    Debug.DrawLine(_rb.position, _rb.position + Vector2.up * 0.1f, Color.red, 2f);
+                }
 
                 // Horizontal movement
                 _predictionRigidbody.Velocity(new Vector2(horizontal * _moveStats.MoveSpeed, _rb.linearVelocity.y));
@@ -293,7 +310,7 @@ namespace PlatformController
         [Reconcile]
         private void Reconcile(ReconcileData data, Channel channel = Channel.Unreliable)
         {
-            BadLogger.LogTrace(
+            BadLogger.LogDebug(
                 $"Reconciled tick {data.GetTick()} {name}");
             _predictionRigidbody.Reconcile(data.Rigidbody2DState);
             ReplicateVisuals((int)data.HorizontalInput, true);
