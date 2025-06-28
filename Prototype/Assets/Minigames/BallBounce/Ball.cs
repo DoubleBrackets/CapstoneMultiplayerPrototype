@@ -8,6 +8,7 @@ using FishNet.Object.Prediction;
 using FishNet.Transporting;
 using GameKit.Dependencies.Utilities;
 using Minigames.BallBounce;
+using PlatformController;
 using UnityEngine;
 
 public class Ball : NetworkBehaviour
@@ -359,14 +360,14 @@ public class Ball : NetworkBehaviour
         ReconcileState(rd);
 
         Vector2 pos = rd.RbState.Position;
-        Bizmos.Instance.AddBizmo(
+        /*Bizmos.Instance.AddBizmo(
             new LineBizmo(pos, pos + Vector2.left * LineLength, Color.blue),
             _bizmoDuration);
 
         Bizmos.Instance.AddGuiBizmo(
             new TextBizmo(pos + Vector2.left * (LineLength * 3f), TimeManager.Tick.ToString() + _rb.linearVelocity,
                 Color.blue),
-            _bizmoDuration);
+            _bizmoDuration);*/
     }
 
     [Reconcile]

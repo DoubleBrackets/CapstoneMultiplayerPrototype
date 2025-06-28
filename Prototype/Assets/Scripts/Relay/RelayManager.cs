@@ -13,6 +13,9 @@ using UnityEngine;
 /// </summary>
 public class RelayManager : MonoBehaviour
 {
+    /// <summary>
+    ///     Data about a join allocation event, for use with UI or other systems.
+    /// </summary>
     public struct JoinAllocationEventData
     {
         public bool DidSucceed;
@@ -27,6 +30,9 @@ public class RelayManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    ///     Data about a create allocation event, for use with UI or other systems.
+    /// </summary>
     public struct CreateAllocationEventData
     {
         public bool DidSucceed;

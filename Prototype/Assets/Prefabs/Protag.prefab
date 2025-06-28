@@ -254,15 +254,14 @@ MonoBehaviour:
   _moveStats:
     MoveSpeed: 6
     MoveAccel: 45
-    JumpHeight: 2.2
+    JumpHeight: 4
     Gravity: -35
     GroundCheckOffset: {x: 0, y: -0.55}
     GroundCheckSize: {x: 0.5, y: 0.05}
     GroundLayer:
       serializedVersion: 2
       m_Bits: 64
-  _collideWithPlayers: 0
-  _clientAuth: 0
+  _collideWithPlayers: 1
 --- !u!114 &7703328290281989573
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -276,6 +275,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   <IsNested>k__BackingField: 0
+  WasActiveDuringEdit: 0
+  WasActiveDuringEdit_Set1: 1
   <ComponentIndex>k__BackingField: 0
   <PredictedSpawn>k__BackingField: {fileID: 0}
   <PredictedOwner>k__BackingField: {fileID: 0}
@@ -293,10 +294,9 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedValusSet: 1
   NetworkObserver: {fileID: 0}
   _enablePrediction: 1
-  _predictionType: 0
+  _predictionType: 2
   _graphicalObject: {fileID: 659893493397798589}
   _detachGraphicalObject: 0
   _enableStateForwarding: 1
@@ -305,17 +305,18 @@ MonoBehaviour:
   _ownerSmoothedProperties: 255
   _adaptiveInterpolation: 0
   _spectatorSmoothedProperties: 255
-  _spectatorInterpolation: 3
+  _spectatorInterpolation: 1
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 12
+  <PrefabId>k__BackingField: 18
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 18221247586097704493
   <SceneId>k__BackingField: 0
   SerializedTransformProperties:
     Position: {x: 0, y: 0, z: 0}
     Rotation: {x: 0, y: 0, z: 0, w: 1}
-    LocalScale: {x: 1, y: 1, z: 1}
+    Scale: {x: 1, y: 1, z: 1}
+    IsValid: 1
 --- !u!114 &5445039347432122676
 MonoBehaviour:
   m_ObjectHideFlags: 0

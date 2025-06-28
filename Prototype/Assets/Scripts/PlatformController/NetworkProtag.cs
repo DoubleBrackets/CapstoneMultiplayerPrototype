@@ -5,343 +5,306 @@ using FishNet.Object.Prediction;
 using FishNet.Transporting;
 using UnityEngine;
 
-public class NetworkProtag : NetworkBehaviour
+namespace PlatformController
 {
-    [Serializable]
-    public struct MoveStats
+    /// <summary>
+    ///     Networked 2D rigidbody character controller with prediction
+    /// </summary>
+    public class NetworkProtag : NetworkBehaviour
     {
-        public float MoveSpeed;
-        public float MoveAccel;
-        public float JumpHeight;
-        public float Gravity;
-        public Vector2 GroundCheckOffset;
-        public Vector2 GroundCheckSize;
-        public LayerMask GroundLayer;
-    }
-
-    private struct MovementData : IReplicateData
-    {
-        public readonly float Horizontal;
-        public readonly bool Jump;
-        public readonly BasicRigidbody2DState Rigidbody2DState;
-
-        public MovementData(float horizontal, bool jump, BasicRigidbody2DState state = default)
+        [Serializable]
+        public struct MoveStats
         {
-            Horizontal = horizontal;
-            Jump = jump;
-            Rigidbody2DState = state;
-            _tick = 0;
+            public float MoveSpeed;
+            public float MoveAccel;
+            public float JumpHeight;
+            public float Gravity;
+            public Vector2 GroundCheckOffset;
+            public Vector2 GroundCheckSize;
+            public LayerMask GroundLayer;
         }
 
-        private uint _tick;
-
-        public uint GetTick()
+        private struct MovementData : IReplicateData
         {
-            return _tick;
-        }
+            public float HorizontalInput;
+            public bool Jump;
 
-        public void SetTick(uint value)
-        {
-            _tick = value;
-        }
-
-        public void Dispose()
-        {
-            // Internal to Fishnet
-        }
-    }
-
-    private struct ReconcileData : IReconcileData
-    {
-        public readonly BasicRigidbody2DState Rigidbody2DState;
-
-        private uint _tick;
-
-        public ReconcileData(BasicRigidbody2DState rigidbody2DState)
-        {
-            Rigidbody2DState = rigidbody2DState;
-            _tick = 0;
-        }
-
-        public uint GetTick()
-        {
-            return _tick;
-        }
-
-        public void SetTick(uint value)
-        {
-            _tick = value;
-        }
-
-        public void Dispose()
-        {
-        }
-    }
-
-    [SerializeField]
-    private Rigidbody2D _rb;
-
-    [SerializeField]
-    private Transform _bodyAnchor;
-
-    [SerializeField]
-    private Animator _animator;
-
-    [SerializeField]
-    private SpriteRenderer _spriteRenderer;
-
-    [SerializeField]
-    private MoveStats _moveStats;
-
-    [SerializeField]
-    private bool _collideWithPlayers;
-
-    [SerializeField]
-    private bool _clientAuth;
-
-    public event Action OnJump;
-
-    private float _horizontalInput;
-    private bool _jumpInput;
-
-    private PredictionRigidbody2D _predictionRigidbody;
-
-    private Rigidbody2DState _rbState;
-    private bool _frozen;
-
-    private int _lastHorizontal;
-
-    private void Awake()
-    {
-        _predictionRigidbody = new PredictionRigidbody2D();
-        _predictionRigidbody.Initialize(_rb);
-        Debug.Log($"Initialized PredictionRigidbody for {name}");
-
-        if (!_collideWithPlayers)
-        {
-            Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("Protag"), LayerMask.NameToLayer("Protag"));
-        }
-    }
-
-    private void Update()
-    {
-        if (IsOwner)
-        {
-            _horizontalInput = Input.GetAxisRaw("Horizontal");
-            _jumpInput = _jumpInput || Input.GetButtonDown("Jump");
-        }
-    }
-
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireCube((Vector2)_bodyAnchor.position + _moveStats.GroundCheckOffset, _moveStats.GroundCheckSize);
-    }
-
-    public override void OnStartClient()
-    {
-        Color c = ServerNetworkPlayerDataManager.Instance.GetPlayerData(Owner).UserColor;
-        GetComponentInChildren<SpriteRenderer>().color = c;
-    }
-
-    public override void OnStartNetwork()
-    {
-        TimeManager.OnTick += TimeManager_OnTick;
-        TimeManager.OnPostTick += TimeManager_PostTick;
-        PredictionManager.OnPrePhysicsTransformSync += PredictionManager_OnPrePhysicsTransformSync;
-
-        gameObject.name = "NetworkProtag";
-        if (Owner.IsHost)
-        {
-            gameObject.name += "[Host]";
-        }
-        else
-        {
-            gameObject.name += "[Client]";
-        }
-
-        gameObject.name += $"[Owner={OwnerId}]";
-    }
-
-    public override void OnStopNetwork()
-    {
-        TimeManager.OnTick -= TimeManager_OnTick;
-        TimeManager.OnPostTick -= TimeManager_PostTick;
-        PredictionManager.OnPrePhysicsTransformSync -= PredictionManager_OnPrePhysicsTransformSync;
-    }
-
-    private void PredictionManager_OnPrePhysicsTransformSync(uint clienttick, uint servertick)
-    {
-        // Prevent strange collision behaviors during reconciliation when one body is not replicate replaying
-        if (!IsBehaviourReconciling)
-        {
-            Freeze();
-        }
-    }
-
-    private void TimeManager_OnTick()
-    {
-        Unfreeze();
-        if (HasAuthority)
-        {
-            BasicRigidbody2DState state = _rb.GetBasicState();
-            var data = new MovementData(_horizontalInput, _jumpInput, state);
-            Replicate(data);
-        }
-        else
-        {
-            Replicate(default);
-        }
-    }
-
-    private void TimeManager_PostTick()
-    {
-        _jumpInput = false;
-        CreateReconcile();
-    }
-
-    [Replicate]
-    private void Replicate(
-        MovementData data,
-        ReplicateState replicateState = ReplicateState.Invalid,
-        Channel channel = Channel.Unreliable)
-    {
-        BadLogger.LogTrace($"Replicating {replicateState} {data.Horizontal} {data.Jump} tick {data.GetTick()} {name}");
-        var delta = (float)TimeManager.TickDelta;
-
-        float horizontal = data.Horizontal;
-        if (replicateState.IsFuture() && !IsServerInitialized)
-        {
-            Freeze();
-            return;
-        }
-
-        // If we're missing a packet, we'll just use the last horizontal input
-        // This is to smooth packet loss out on observers, since player movement is generally continuous
-        if (replicateState.IsTickedNonCreated())
-        {
-            horizontal = _lastHorizontal;
-            Debug.DrawLine(_rb.position, _rb.position + Vector2.up, Color.red, 2f);
-        }
-        else if (replicateState.IsTickedCreated())
-        {
-            _lastHorizontal = (int)horizontal;
-            Debug.DrawLine(_rb.position, _rb.position + Vector2.up, Color.green, 2f);
-        }
-        else
-        {
-            Debug.Log("Huh? Replicate state is neither TickedNonCreated nor TickedCreated.");
-        }
-
-        Vector2 currentVel = _rb.linearVelocity;
-
-        Vector2 desiredVel = currentVel;
-        desiredVel.x = Mathf.MoveTowards(
-            currentVel.x,
-            horizontal * _moveStats.MoveSpeed,
-            _moveStats.MoveAccel * delta);
-
-        bool isGrounded = UpdateGroundCheck();
-        if (isGrounded)
-        {
-            if (data.Jump)
+            public MovementData(float horizontalInput, bool jump)
             {
-                float jumpVel = Mathf.Sqrt(2 * -_moveStats.Gravity * _moveStats.JumpHeight);
-                _predictionRigidbody.AddForce(Vector2.up * jumpVel, ForceMode2D.Impulse);
-                // desiredVel.y = jumpVel;
+                HorizontalInput = horizontalInput;
+                Jump = jump;
+                _tick = 0;
+            }
 
-                if (replicateState.IsTickedCreated())
+            private uint _tick;
+
+            public uint GetTick()
+            {
+                return _tick;
+            }
+
+            public void SetTick(uint value)
+            {
+                _tick = value;
+            }
+
+            public void Dispose()
+            {
+                // Internal to Fishnet
+            }
+        }
+
+        private struct ReconcileData : IReconcileData
+        {
+            public readonly PredictionRigidbody2D Rigidbody2DState;
+            public float HorizontalInput;
+
+            private uint _tick;
+
+            public ReconcileData(PredictionRigidbody2D rigidbody2DState, float horizontalInput)
+            {
+                Rigidbody2DState = rigidbody2DState;
+                HorizontalInput = horizontalInput;
+                _tick = 0;
+            }
+
+            public uint GetTick()
+            {
+                return _tick;
+            }
+
+            public void SetTick(uint value)
+            {
+                _tick = value;
+            }
+
+            public void Dispose()
+            {
+            }
+        }
+
+        [Header("Depends")]
+
+        [SerializeField]
+        private Rigidbody2D _rb;
+
+        [SerializeField]
+        private Transform _bodyAnchor;
+
+        [SerializeField]
+        private Animator _animator;
+
+        [SerializeField]
+        private SpriteRenderer _spriteRenderer;
+
+        [Header("Config")]
+
+        [SerializeField]
+        private MoveStats _moveStats;
+
+        [SerializeField]
+        private bool _collideWithPlayers;
+
+        public event Action OnJump;
+
+        private float _horizontalInput;
+        private bool _jumpInput;
+
+        private PredictionRigidbody2D _predictionRigidbody;
+
+        private Rigidbody2DState _rbState;
+        private bool _frozen;
+
+        private void Awake()
+        {
+            _predictionRigidbody = new PredictionRigidbody2D();
+            _predictionRigidbody.Initialize(_rb);
+            Debug.Log($"Initialized PredictionRigidbody for {name}");
+
+            if (!_collideWithPlayers)
+            {
+                Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("Protag"), LayerMask.NameToLayer("Protag"));
+            }
+        }
+
+        private void Update()
+        {
+            if (IsOwner)
+            {
+                // Read inputs
+                _horizontalInput = Input.GetAxisRaw("Horizontal");
+                _jumpInput = _jumpInput || Input.GetButtonDown("Jump");
+            }
+        }
+
+        private void OnDrawGizmos()
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireCube((Vector2)_bodyAnchor.position + _moveStats.GroundCheckOffset,
+                _moveStats.GroundCheckSize);
+        }
+
+        public override void OnStartClient()
+        {
+            Color c = ServerNetworkPlayerDataManager.Instance.GetPlayerData(Owner).UserColor;
+            GetComponentInChildren<SpriteRenderer>().color = c;
+        }
+
+        public override void OnStartNetwork()
+        {
+            TimeManager.OnTick += TimeManager_OnTick;
+            TimeManager.OnPostTick += TimeManager_PostTick;
+            RenameGameObject();
+        }
+
+        private void RenameGameObject()
+        {
+            gameObject.name = "NetworkProtag";
+            if (Owner.IsHost)
+            {
+                gameObject.name += "[Host]";
+            }
+            else
+            {
+                gameObject.name += "[Client]";
+            }
+
+            gameObject.name += $"[Owner={OwnerId}]";
+        }
+
+        public override void OnStopNetwork()
+        {
+            TimeManager.OnTick -= TimeManager_OnTick;
+            TimeManager.OnPostTick -= TimeManager_PostTick;
+        }
+
+        private void TimeManager_OnTick()
+        {
+            if (IsController)
+            {
+                var data = new MovementData(_horizontalInput, _jumpInput);
+                Replicate(data);
+            }
+            else
+            {
+                Replicate(default);
+            }
+        }
+
+        private void TimeManager_PostTick()
+        {
+            _jumpInput = false;
+            CreateReconcile();
+        }
+
+        [Replicate]
+        private void Replicate(
+            MovementData data,
+            ReplicateState replicateState = ReplicateState.Invalid,
+            Channel channel = Channel.Unreliable)
+        {
+            BadLogger.LogTrace(
+                $"Replicating {replicateState.ContainsTicked()} {replicateState.ContainsReplayed()} {replicateState.ContainsCreated()} {data.HorizontalInput} {data.Jump} tick {data.GetTick()} {name}");
+            var delta = (float)TimeManager.TickDelta;
+
+            float horizontal = data.HorizontalInput;
+
+            bool canPause = !IsOwner && !IsServerStarted;
+
+            if (replicateState.IsFuture())
+            {
+                // Pause for future ticks to prevent snapping from predicting on non-owning clients
+                if (canPause)
                 {
-                    OnJump?.Invoke();
+                    NetworkObject.RigidbodyPauser.Pause();
+                }
+            }
+            else
+            {
+                // Unpause for created ticks
+                if (canPause)
+                {
+                    NetworkObject.RigidbodyPauser.Unpause();
+                    _horizontalInput = horizontal;
+                }
+
+                Debug.DrawLine(_rb.position, _rb.position + Vector2.up * 0.1f, Color.green, 2f);
+
+                // Horizontal movement
+                _predictionRigidbody.Velocity(new Vector2(horizontal * _moveStats.MoveSpeed, _rb.linearVelocity.y));
+
+                // Jump movement
+                bool isGrounded = UpdateGroundCheck();
+                if (isGrounded)
+                {
+                    if (data.Jump)
+                    {
+                        float jumpVel = Mathf.Sqrt(2 * -_moveStats.Gravity * _moveStats.JumpHeight);
+                        _predictionRigidbody.AddForce(Vector2.up * jumpVel * _rb.mass, ForceMode2D.Impulse);
+
+                        if (replicateState.IsTickedCreated())
+                        {
+                            OnJump?.Invoke();
+                        }
+                    }
+                }
+                else
+                {
+                    // Gravity
+                    _predictionRigidbody.AddForce(Vector2.up * (_moveStats.Gravity * delta) * _rb.mass,
+                        ForceMode2D.Impulse);
+                }
+
+                _predictionRigidbody.Simulate();
+
+                if (replicateState.ContainsCreated())
+                {
+                    ReplicateVisuals((int)horizontal, isGrounded);
                 }
             }
         }
-        /*else
-        {
-            _predictionRigidbody.AddForce(Vector2.up * _moveStats.Gravity);
-            // desiredVel.y += _moveStats.Gravity * delta;
-        }*/
 
-        _predictionRigidbody.AddForce(Vector3.right * (desiredVel.x - currentVel.x), ForceMode2D.Impulse);
-        // _predictionRigidbody.Velocity(desiredVel);
-
-        _predictionRigidbody.Simulate();
-
-        if (data.Horizontal > 0)
+        private void ReplicateVisuals(int horizontalInput, bool isGrounded)
         {
-            _spriteRenderer.flipX = false;
-        }
-        else if (data.Horizontal < 0)
-        {
-            _spriteRenderer.flipX = true;
+            if (horizontalInput > 0)
+            {
+                _spriteRenderer.flipX = false;
+            }
+            else if (horizontalInput < 0)
+            {
+                _spriteRenderer.flipX = true;
+            }
+
+            _animator.SetFloat("Speed", _moveStats.MoveSpeed * Mathf.Abs(horizontalInput));
+            _animator.SetBool("Air", !isGrounded);
         }
 
-        _animator.SetFloat("Speed", Mathf.Abs(_rb.linearVelocity.x) * Mathf.Abs(horizontal));
-        _animator.SetBool("Air", !isGrounded);
-
-        if (_clientAuth && IsServerStarted)
+        public override void CreateReconcile()
         {
-            _rb.SetBasicState(data.Rigidbody2DState);
-        }
-    }
+            if (!IsServerStarted)
+            {
+                return;
+            }
 
-    private void Freeze()
-    {
-        if (_frozen)
-        {
-            return;
+            var data = new ReconcileData(_predictionRigidbody, _horizontalInput);
+            Reconcile(data);
         }
 
-        BadLogger.LogTrace($"Freezing {name}", BadLogger.Actor.Client);
-        _frozen = true;
-        _rbState = new Rigidbody2DState(_rb);
-        _rb.bodyType = RigidbodyType2D.Static;
-    }
-
-    private void Unfreeze()
-    {
-        if (!_frozen)
+        [Reconcile]
+        private void Reconcile(ReconcileData data, Channel channel = Channel.Unreliable)
         {
-            return;
+            BadLogger.LogTrace(
+                $"Reconciled tick {data.GetTick()} {name}");
+            _predictionRigidbody.Reconcile(data.Rigidbody2DState);
+            ReplicateVisuals((int)data.HorizontalInput, true);
         }
 
-        BadLogger.LogTrace($"Unfreeze {name}", BadLogger.Actor.Client);
-
-        _frozen = false;
-        _rb.bodyType = RigidbodyType2D.Dynamic;
-        _rb.SetState(_rbState);
-    }
-
-    public override void CreateReconcile()
-    {
-        if (!IsServerStarted)
+        private bool UpdateGroundCheck()
         {
-            return;
+            Vector2 checkPos = _rb.position + _moveStats.GroundCheckOffset;
+            Collider2D hit = Physics2D.OverlapBox(checkPos, _moveStats.GroundCheckSize, 0, _moveStats.GroundLayer);
+
+            return hit != null;
         }
-
-        var data = new ReconcileData(_rb.GetBasicState());
-        Reconcile(data);
-    }
-
-    [Reconcile]
-    private void Reconcile(ReconcileData data, Channel channel = Channel.Unreliable)
-    {
-        Unfreeze();
-
-        if (!IsOwner || !_clientAuth)
-        {
-            BadLogger.LogTrace($"Reconciling {name} tick {data.GetTick()}", BadLogger.Actor.Client);
-            _rb.SetBasicState(data.Rigidbody2DState);
-        }
-
-        Debug.DrawLine(_rb.position, _rb.position + Vector2.up, Color.yellow, 2f);
-    }
-
-    private bool UpdateGroundCheck()
-    {
-        Vector2 checkPos = _rb.position + _moveStats.GroundCheckOffset;
-        Collider2D hit = Physics2D.OverlapBox(checkPos, _moveStats.GroundCheckSize, 0, _moveStats.GroundLayer);
-
-        return hit != null;
     }
 }
