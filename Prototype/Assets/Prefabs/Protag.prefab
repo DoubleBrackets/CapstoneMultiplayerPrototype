@@ -60,6 +60,7 @@ GameObject:
   - component: {fileID: 659893493397798589}
   - component: {fileID: 5453173470615501801}
   - component: {fileID: 923696894076353942}
+  - component: {fileID: 3863656327268269290}
   m_Layer: 7
   m_Name: Square
   m_TagString: Untagged
@@ -161,6 +162,39 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &3863656327268269290
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 901009240292969721}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 453481867b26f7c43b5bf38802a5f50e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 7703328290281989573}
+  _networkObjectCache: {fileID: 0}
+  _initializationSettings:
+    TargetTransform: {fileID: 2984799887258299081}
+    DetachOnStart: 0
+    AttachOnStop: 0
+  _controllerMovementSettings:
+    EnableTeleport: 0
+    TeleportThreshold: 0
+    AdaptiveInterpolationValue: 0
+    InterpolationValue: 3
+    SmoothedProperties: 1
+    SnapNonSmoothedProperties: 0
+  _spectatorMovementSettings:
+    EnableTeleport: 0
+    TeleportThreshold: 0
+    AdaptiveInterpolationValue: 0
+    InterpolationValue: 6
+    SmoothedProperties: 1
+    SnapNonSmoothedProperties: 0
 --- !u!1 &2870825669331747009
 GameObject:
   m_ObjectHideFlags: 0
@@ -253,7 +287,7 @@ MonoBehaviour:
   _spriteRenderer: {fileID: 5453173470615501801}
   _moveStats:
     MoveSpeed: 6
-    MoveAccel: 45
+    MoveAccel: 25
     JumpHeight: 6
     Gravity: -35
     GroundCheckOffset: {x: 0, y: -0.55}
@@ -262,6 +296,7 @@ MonoBehaviour:
       serializedVersion: 2
       m_Bits: 192
   _collideWithPlayers: 1
+  _spectatorTicksToPredict: 5
 --- !u!114 &7703328290281989573
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -297,15 +332,15 @@ MonoBehaviour:
   NetworkObserver: {fileID: 0}
   _enablePrediction: 1
   _predictionType: 2
-  _graphicalObject: {fileID: 659893493397798589}
+  _graphicalObject: {fileID: 0}
   _detachGraphicalObject: 0
   _enableStateForwarding: 1
   _networkTransform: {fileID: 0}
-  _ownerInterpolation: 1
-  _ownerSmoothedProperties: 3
+  _ownerInterpolation: 3
+  _ownerSmoothedProperties: 1
   _adaptiveInterpolation: 0
-  _spectatorSmoothedProperties: 3
-  _spectatorInterpolation: 5
+  _spectatorSmoothedProperties: 1
+  _spectatorInterpolation: 6
   _enableTeleport: 0
   _teleportThreshold: 1
   <PrefabId>k__BackingField: 18

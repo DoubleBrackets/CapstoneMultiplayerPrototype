@@ -210,7 +210,7 @@ MonoBehaviour:
   NetworkObserver: {fileID: 0}
   _enablePrediction: 1
   _predictionType: 2
-  _graphicalObject: {fileID: 2074290265247105037}
+  _graphicalObject: {fileID: 0}
   _detachGraphicalObject: 0
   _enableStateForwarding: 1
   _networkTransform: {fileID: 0}
@@ -218,7 +218,7 @@ MonoBehaviour:
   _ownerSmoothedProperties: 3
   _adaptiveInterpolation: 0
   _spectatorSmoothedProperties: 3
-  _spectatorInterpolation: 2
+  _spectatorInterpolation: 6
   _enableTeleport: 0
   _teleportThreshold: 1
   <PrefabId>k__BackingField: 17
@@ -257,6 +257,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2074290265247105037}
   - component: {fileID: 4900096231286628641}
+  - component: {fileID: 417310627233338413}
   m_Layer: 0
   m_Name: Circle
   m_TagString: Untagged
@@ -335,6 +336,39 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &417310627233338413
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3089296289333514318}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 453481867b26f7c43b5bf38802a5f50e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 6785763816503814623}
+  _networkObjectCache: {fileID: 0}
+  _initializationSettings:
+    TargetTransform: {fileID: 4483460282975665148}
+    DetachOnStart: 0
+    AttachOnStop: 0
+  _controllerMovementSettings:
+    EnableTeleport: 0
+    TeleportThreshold: 0
+    AdaptiveInterpolationValue: 0
+    InterpolationValue: 5
+    SmoothedProperties: 3
+    SnapNonSmoothedProperties: 0
+  _spectatorMovementSettings:
+    EnableTeleport: 0
+    TeleportThreshold: 0
+    AdaptiveInterpolationValue: 0
+    InterpolationValue: 5
+    SmoothedProperties: 3
+    SnapNonSmoothedProperties: 0
 --- !u!1 &8949214175129216546
 GameObject:
   m_ObjectHideFlags: 0
@@ -411,7 +445,7 @@ SpriteRenderer:
   m_SortingLayerID: -288955301
   m_SortingLayer: 3
   m_SortingOrder: -24
-  m_Sprite: {fileID: 7482667652216324306, guid: 75f5f34dc1b5347e0b8351032682f224, type: 3}
+  m_Sprite: {fileID: -2413806693520163455, guid: ebe73ca9363db456bacf42c025bb4847, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

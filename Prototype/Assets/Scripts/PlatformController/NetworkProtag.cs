@@ -107,6 +107,9 @@ namespace PlatformController
         [SerializeField]
         private bool _collideWithPlayers;
 
+        [SerializeField]
+        private int _spectatorTicksToPredict;
+
         public event Action OnJump;
 
         private float _horizontalInput;
@@ -116,6 +119,8 @@ namespace PlatformController
 
         private Rigidbody2DState _rbState;
         private bool _frozen;
+
+        private int _remainingTicksToPredict;
 
         private void Awake()
         {
@@ -213,7 +218,7 @@ namespace PlatformController
 
             bool canPause = !IsOwner && !IsServerStarted;
 
-            /*if (state.IsFuture())
+            if (state.IsFuture() && _remainingTicksToPredict <= 0)
             {
                 // Pause for future ticks to prevent snapping from predicting on non-owning clients
                 if (canPause)
@@ -221,13 +226,19 @@ namespace PlatformController
                     NetworkObject.RigidbodyPauser.Pause();
                 }
             }
-            else*/
+            else
             {
+                // Predict a configurable number of ticks into the future by assuming held inputs
+                if (state.IsFuture())
+                {
+                    _remainingTicksToPredict--;
+                }
+
                 // Unpause for created ticks
-                /*if (canPause)
+                if (canPause)
                 {
                     NetworkObject.RigidbodyPauser.Unpause();
-                }*/
+                }
 
                 if (state.ContainsCreated())
                 {
@@ -246,8 +257,14 @@ namespace PlatformController
                     Debug.DrawLine(_rb.position, _rb.position + Vector2.up * 0.1f, Color.red, 2f);
                 }
 
+                float currentHorizontal = _rb.linearVelocity.x;
+                float desiredHorizontal = horizontal * _moveStats.MoveSpeed;
+
+                float newHorizontal =
+                    Mathf.MoveTowards(currentHorizontal, desiredHorizontal, _moveStats.MoveAccel * delta);
+
                 // Horizontal movement
-                _predictionRigidbody.Velocity(new Vector2(horizontal * _moveStats.MoveSpeed, _rb.linearVelocity.y));
+                _predictionRigidbody.Velocity(new Vector2(newHorizontal, _rb.linearVelocity.y));
 
                 // Jump movement
                 bool isGrounded = UpdateGroundCheck();
@@ -311,6 +328,7 @@ namespace PlatformController
         {
             BadLogger.LogTrace(
                 $"Reconciled tick {data.GetTick()} {name}");
+            _remainingTicksToPredict = _spectatorTicksToPredict;
             _predictionRigidbody.Reconcile(data.Rigidbody2DState);
             ReplicateVisuals((int)data.HorizontalInput, true);
         }
