@@ -3,6 +3,7 @@ using FishNet;
 using FishNet.Connection;
 using FishNet.Managing.Client;
 using FishNet.Managing.Server;
+using FishNet.Managing.Transporting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -21,6 +22,24 @@ public class NetworkSceneDebug : MonoBehaviour
         _style = new GUIStyle();
         _style.fontSize = _fontSize;
         _style.normal.textColor = _color;
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            TransportManager transportManager = InstanceFinder.TransportManager;
+            if (transportManager != null)
+            {
+                bool isEnabled = transportManager.LatencySimulator.GetEnabled();
+                transportManager.LatencySimulator.SetEnabled(!isEnabled);
+                BadLogger.LogInfo($"Latency simulation toggled to {!isEnabled}");
+            }
+            else
+            {
+                BadLogger.LogWarning("TransportManager not found. Cannot toggle latency simulation.");
+            }
+        }
     }
 
     private void OnGUI()
@@ -51,6 +70,12 @@ public class NetworkSceneDebug : MonoBehaviour
             GUILayout.Label($"Local Client: {clientManager.Connection.ClientId}", _style);
             GUILayout.Label($"Tick: {InstanceFinder.TimeManager.Tick}", _style);
             GUILayout.Label($"LocalTick: {InstanceFinder.TimeManager.LocalTick}", _style);
+        }
+
+        TransportManager transportManager = InstanceFinder.TransportManager;
+        if (transportManager)
+        {
+            GUILayout.Label($"Simulating Latency: {transportManager.LatencySimulator.GetEnabled()}", _style);
         }
     }
 }

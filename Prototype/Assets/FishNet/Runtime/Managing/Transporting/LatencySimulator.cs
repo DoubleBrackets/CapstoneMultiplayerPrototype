@@ -205,6 +205,10 @@ namespace FishNet.Managing.Transporting
         /// <param name="conn">Connection to remove pending packets for.</param>
         public void RemovePendingForConnection(int connectionId)
         {
+            //If not enabled exit early to save work.
+            if (!GetEnabled())
+                return;
+            
             RemoveFromCollection(_toServerUnreliable);
             RemoveFromCollection(_toServerUnreliable);
             RemoveFromCollection(_toClientReliable);
@@ -296,8 +300,8 @@ namespace FishNet.Managing.Transporting
         /// <summary>
         /// Simulates pending outgoing packets.
         /// </summary>
-        /// <param name="toServer">True if sending to the server.</param>
-        public void IterateOutgoing(bool toServer)
+        /// <param name="asServer">True to send data from the local server to clients, false to send from the local client to server.
+        public void IterateOutgoing(bool asServer)
         {
             if (_transport == null)
             {
@@ -305,15 +309,15 @@ namespace FishNet.Managing.Transporting
                 return;
             }
 
-            if (toServer)
-            {
-                IterateCollection(_toServerReliable, Channel.Reliable);
-                IterateCollection(_toServerUnreliable, Channel.Unreliable);
-            }
-            else
+            if (asServer)
             {
                 IterateCollection(_toClientReliable, Channel.Reliable);
                 IterateCollection(_toClientUnreliable, Channel.Unreliable);
+            }
+            else
+            {
+                IterateCollection(_toServerReliable, Channel.Reliable);
+                IterateCollection(_toServerUnreliable, Channel.Unreliable);
             }
 
             void IterateCollection(List<Message> collection, Channel channel)
@@ -330,10 +334,10 @@ namespace FishNet.Managing.Transporting
                     if (unscaledTime < msg.SendTime)
                         break;
 
-                    if (toServer)
-                        _transport.SendToServer(cByte, msg.GetSegment());
-                    else
+                    if (asServer)
                         _transport.SendToClient(cByte, msg.GetSegment(), msg.ConnectionId);
+                    else
+                        _transport.SendToServer(cByte, msg.GetSegment());
 
                     iterations++;
                 }
@@ -346,7 +350,7 @@ namespace FishNet.Managing.Transporting
                 }
             }
 
-            _transport.IterateOutgoing(toServer);
+            _transport.IterateOutgoing(asServer);
         }
 
         /// <summary>

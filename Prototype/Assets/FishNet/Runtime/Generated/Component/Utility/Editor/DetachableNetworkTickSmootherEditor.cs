@@ -1,9 +1,7 @@
 ﻿#if UNITY_EDITOR
-using FishNet.Editing;
 using GameKit.Dependencies.Utilities;
 using UnityEditor;
-using UnityEngine;
-using GameKitEditing = GameKit.Dependencies.Utilities.Editing;
+using LayoutTools = GameKit.Dependencies.Utilities.EditorGuiLayoutTools;
 
 namespace FishNet.Component.Transforming.Editing
 {
@@ -38,8 +36,9 @@ namespace FishNet.Component.Transforming.Editing
         {
             serializedObject.Update();
 
-            GameKitEditing.AddObjectField("Script:", MonoScript.FromMonoBehaviour((DetachableNetworkTickSmoother)target), typeof(DetachableNetworkTickSmoother), false, EditorLayoutEnableType.Disabled);
+            LayoutTools.AddObjectField("Script:", MonoScript.FromMonoBehaviour((DetachableNetworkTickSmoother)target), typeof(DetachableNetworkTickSmoother), false, EditorLayoutEnableType.Disabled);
 
+            EditorGUILayout.HelpBox("This component will be obsoleted soon. Use NetworkTickSmoother or OfflineTickSmoother.", MessageType.Warning);
             //Misc.
             EditorGUILayout.LabelField("Misc", EditorStyles.boldLabel);
             EditorGUI.indentLevel++;

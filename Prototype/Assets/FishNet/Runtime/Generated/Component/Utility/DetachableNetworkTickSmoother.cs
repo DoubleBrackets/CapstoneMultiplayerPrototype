@@ -90,7 +90,7 @@ namespace FishNet.Component.Transforming
         /// <summary>
         /// How quickly to move towards target.
         /// </summary>
-        private MoveRates _moveRates = new(MoveRatesCls.INSTANT_VALUE);
+        private MoveRates _moveRates = new(MoveRates.INSTANT_VALUE);
         /// <summary>
         /// True if initialized.
         /// </summary>
@@ -156,7 +156,7 @@ namespace FishNet.Component.Transforming
                 transform.SetLocalProperties(_transformInstantiatedLocalProperties);
             }
 
-            _postTickFollowObjectWorldProperties.Reset();
+            _postTickFollowObjectWorldProperties.ResetState();
             ChangeSubscription(false);
 
             _initialized = false;
@@ -183,7 +183,7 @@ namespace FishNet.Component.Transforming
             if (!_synchronizeRotation)
                 _postTickFollowObjectWorldProperties.Rotation = transform.rotation;
             if (!_synchronizeScale)
-                _postTickFollowObjectWorldProperties.LocalScale = transform.localScale;
+                _postTickFollowObjectWorldProperties.Scale = transform.localScale;
             SetMoveRates();
         }
 
@@ -226,7 +226,7 @@ namespace FishNet.Component.Transforming
             if (!_initialized)
                 return;
 
-            _moveRates.MoveWorldToTarget(transform, _postTickFollowObjectWorldProperties, Time.deltaTime);
+            _moveRates.Move(transform, _postTickFollowObjectWorldProperties, Time.deltaTime, useWorldSpace: true);
         }
 
         private void SetMoveRates()
@@ -242,7 +242,7 @@ namespace FishNet.Component.Transforming
             if (_interpolation == 1)
                 duration += Mathf.Max(Time.deltaTime, (1f / 50f));
 
-            float teleportT = (_enableTeleport) ? _teleportThreshold : MoveRatesCls.UNSET_VALUE;
+            float teleportT = (_enableTeleport) ? _teleportThreshold : MoveRates.UNSET_VALUE;
             _moveRates = MoveRates.GetWorldMoveRates(transform, _followObject, duration, teleportT);
         }
 

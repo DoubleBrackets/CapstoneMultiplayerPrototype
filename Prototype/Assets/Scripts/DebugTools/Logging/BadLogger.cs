@@ -1,3 +1,4 @@
+using FishNet;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -79,7 +80,17 @@ public class BadLogger : MonoBehaviour
 
         string priorityString = priority.ToString().ToUpper();
         string actorString = actor.ToString().ToUpper();
-        var prefix = $"[{priorityString}][{actorString}]";
+
+        long serverTick = -1u;
+        long localTick = -1u;
+
+        if (InstanceFinder.TimeManager != null)
+        {
+            serverTick = InstanceFinder.TimeManager.Tick;
+            localTick = InstanceFinder.TimeManager.LocalTick;
+        }
+
+        var prefix = $"[{priorityString}][{actorString}][{serverTick}][{localTick}]";
 
         if (priority == Priority.Trace || priority == Priority.Debug || priority == Priority.Info)
         {

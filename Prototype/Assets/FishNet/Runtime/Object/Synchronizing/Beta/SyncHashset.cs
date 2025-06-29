@@ -1,4 +1,4 @@
-﻿#if !FISHNET_STABLE_MODE
+﻿#if !FISHNET_STABLE_SYNCTYPES
 using FishNet.Documenting;
 using FishNet.Managing;
 using FishNet.Object.Synchronizing.Internal;
@@ -6,9 +6,6 @@ using FishNet.Serializing;
 using GameKit.Dependencies.Utilities;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Runtime.CompilerServices;
-using UnityEngine;
 
 namespace FishNet.Object.Synchronizing
 {
@@ -122,7 +119,7 @@ namespace FishNet.Object.Synchronizing
         public SyncHashSet(HashSet<T> collection, IEqualityComparer<T> comparer = null, SyncTypeSettings settings = new()) : base(settings)
         {
             _comparer = (comparer == null) ? EqualityComparer<T>.Default : comparer;
-            Collection = collection;
+            Collection = (collection == null) ? CollectionCaches<T>.RetrieveHashSet() : collection;
 
             _initialValues = CollectionCaches<T>.RetrieveHashSet();
             _changed = CollectionCaches<ChangeData>.RetrieveList();
@@ -368,9 +365,7 @@ namespace FishNet.Object.Synchronizing
         {
             base.ResetState(asServer);
 
-            bool canReset = (asServer || !base.IsReadAsClientHost(asServer));
-
-            if (canReset)
+            if (base.CanReset(asServer))
             {
                 _sendAll = false;
                 _changed.Clear();
